@@ -72,11 +72,11 @@ const SERVICES = [
   { Icon: Gauge, title: "Redes de agua y gas", desc: "Renovación de cañerías, presurizadores y conexiones. Matriculados y habilitados." },
 ];
 
-const STATS = [
+const STATS: { value: string; label: string; star?: boolean }[] = [
   { value: "15+", label: "Años en el oficio" },
   { value: "2.400+", label: "Clientes atendidos" },
   { value: "<60min", label: "En tu casa" },
-  { value: "4.9★", label: "Promedio de reseñas" },
+  { value: "4.9", label: "Promedio de reseñas", star: true },
 ];
 
 const PROCESS = [
@@ -118,6 +118,7 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [faq, setFaq] = useState<number | null>(0);
+  const [active, setActive] = useState("servicios");
   const [heroRef, heroIn] = useInView<HTMLDivElement>(0.05);
   const [servRef, servIn] = useInView<HTMLElement>();
   const [procRef, procIn] = useInView<HTMLElement>();
@@ -131,6 +132,19 @@ export default function App() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
+  // scrollspy — mark the nav link of the section in view
+  useEffect(() => {
+    const ids = NAV.map((l) => l.toLowerCase());
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) setActive(e.target.id); });
+      },
+      { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
+    );
+    ids.forEach((id) => { const el = document.getElementById(id); if (el) obs.observe(el); });
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <div className="bg-white text-ink overflow-x-hidden selection:bg-aqua/25">
       <style>{`
@@ -138,9 +152,20 @@ export default function App() {
           --ink:#0A1A2F; --ink-soft:#11304f;
           --aqua:#1AC0CF; --aqua-deep:#0C8FA0;
           --copper:#D08A4E; --copper-soft:#E7B486;
+          /* surface elevation scale */
+          --surface-0:#08172a; --surface-1:#0f2942; --surface-2:#ffffff;
+          --elev-1:0 2px 10px -4px rgba(3,12,28,.5);
+          --elev-2:0 20px 44px -22px rgba(3,12,28,.55);
+          --elev-3:0 44px 84px -34px rgba(3,12,28,.66);
+          --focus:var(--aqua);
         }
-        .ink-grad{background:radial-gradient(120% 120% at 78% 8%,#16466e 0%,#0d2742 42%,#0A1A2F 100%)}
-        .blueprint{position:absolute;inset:0;width:100%;height:100%;mask-image:radial-gradient(95% 85% at 60% 35%,#000 40%,transparent 100%)}
+        .ink-grad{background:radial-gradient(125% 120% at 80% 4%,#16466e 0%,#0d2742 40%,var(--surface-0) 100%)}
+        /* raised shelf the card rests on — gives real elevation, not floating */
+        .shelf{background:linear-gradient(158deg,var(--surface-1) 0%,#0b2036 100%);border:1px solid rgba(255,255,255,.07);box-shadow:var(--elev-2),inset 0 1px 0 rgba(255,255,255,.05)}
+        /* keyboard focus — dual ring (dark inner + accent outer) clears AA 3:1 on light AND dark surfaces */
+        a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:none;box-shadow:0 0 0 2px #0b2036,0 0 0 4px var(--focus);border-radius:12px}
+        .blueprint{position:absolute;inset:0;width:100%;height:100%;mask-image:radial-gradient(70% 78% at 16% 42%,#000 24%,transparent 72%);-webkit-mask-image:radial-gradient(70% 78% at 16% 42%,#000 24%,transparent 72%)}
+        .route-dash{stroke-dasharray:3 8;animation:flow 1s linear infinite}
         .flow{animation:flow 1s linear infinite}
         @keyframes flow{to{stroke-dashoffset:-32}}
         .glow{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none}
@@ -167,8 +192,11 @@ export default function App() {
         .nav-link{position:relative}
         .nav-link::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:2px;border-radius:2px;background:var(--aqua-deep);transition:width .25s ease}
         .nav-link:hover::after{width:100%}
+        .nav-link.nav-active{color:var(--aqua-deep)}
+        .nav-link.nav-active::after{width:100%}
 
-        .card{transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s,border-color .3s}
+        /* resting elevation so cards lift off the surface, not sit flat on it */
+        .card{box-shadow:0 1px 2px rgba(15,23,42,.04),0 6px 16px -8px rgba(15,23,42,.12);transition:transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s,border-color .18s}
         .card:hover{transform:translateY(-6px);box-shadow:0 26px 50px -22px rgba(10,26,47,.28);border-color:#cdeef1}
 
         .icon-tile{background:linear-gradient(135deg,#e7fbfd,#d2f1f4);color:var(--aqua-deep)}
@@ -216,9 +244,20 @@ export default function App() {
           </a>
 
           <nav className="hidden md:flex items-center gap-8">
-            {NAV.map(l => (
-              <a key={l} href={`#${l.toLowerCase()}`} className={`nav-link text-sm font-medium transition-colors ${scrolled ? "text-slate-600 hover:text-ink" : "text-white/85 hover:text-white"}`}>{l}</a>
-            ))}
+            {NAV.map(l => {
+              const id = l.toLowerCase();
+              const on = active === id;
+              return (
+                <a
+                  key={l}
+                  href={`#${id}`}
+                  aria-current={on ? "true" : undefined}
+                  className={`nav-link text-sm font-medium transition-colors ${on ? "nav-active" : ""} ${scrolled ? "text-slate-600 hover:text-ink" : "text-white/85 hover:text-white"}`}
+                >
+                  {l}
+                </a>
+              );
+            })}
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
@@ -237,20 +276,32 @@ export default function App() {
 
         {menuOpen && (
           <div className="md:hidden bg-white border-t border-slate-100 px-6 py-5 flex flex-col gap-4 shadow-xl">
-            {NAV.map(l => (
-              <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setMenuOpen(false)} className="text-slate-700 font-medium">{l}</a>
-            ))}
+            {NAV.map(l => {
+              const id = l.toLowerCase();
+              const on = active === id;
+              return (
+                <a
+                  key={l}
+                  href={`#${id}`}
+                  aria-current={on ? "true" : undefined}
+                  onClick={() => setMenuOpen(false)}
+                  className={`font-medium ${on ? "text-aqua-deep" : "text-slate-700"}`}
+                >
+                  {l}
+                </a>
+              );
+            })}
             <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary font-semibold px-5 py-3 rounded-xl text-center">Pedir plomero</a>
           </div>
         )}
       </header>
 
       {/* HERO */}
-      <section id="top" className="relative ink-grad min-h-screen flex items-center overflow-hidden">
+      <section id="top" className="relative ink-grad flex items-center overflow-hidden">
         <Blueprint className="blueprint" />
         <div className="glow w-[26rem] h-[26rem]" style={{ background: "rgba(26,192,207,.16)", top: "-5rem", right: "-2rem" }} />
 
-        <div className="max-w-6xl mx-auto px-6 pt-28 md:pt-24 pb-24 w-full grid md:grid-cols-2 gap-14 items-center relative z-10" ref={heroRef}>
+        <div className="max-w-6xl mx-auto px-6 pt-28 md:pt-28 pb-40 md:pb-52 w-full grid md:grid-cols-2 gap-14 items-center relative z-10" ref={heroRef}>
           {/* Copy */}
           <div>
             <div className={`reveal ${heroIn ? "in" : ""}`}>
@@ -259,10 +310,10 @@ export default function App() {
                 Disponibles ahora · respuesta &lt; 60 min
               </span>
             </div>
-            <h1 className={`font-display text-[clamp(2.7rem,6vw,4.3rem)] font-black text-white leading-[1.02] tracking-[-.02em] mb-6 reveal d1 ${heroIn ? "in" : ""}`}>
+            <h1 className={`font-display text-[clamp(2.7rem,6vw,4.3rem)] font-black text-white leading-[1.08] tracking-[-.02em] mb-6 pb-1 reveal d1 ${heroIn ? "in" : ""}`}>
               Tu plomero<br />
               de confianza,<br />
-              <span className="italic" style={{ color: "var(--aqua)" }}>cuando lo necesitás.</span>
+              <span className="italic inline-block pr-2 pb-1.5" style={{ color: "var(--aqua)" }}>cuando lo necesitás.</span>
             </h1>
             <p className={`text-white/70 text-lg leading-relaxed max-w-md mb-8 reveal d2 ${heroIn ? "in" : ""}`}>
               Plomeros matriculados a domicilio. Urgencias, destapes, pérdidas y calefones. Presupuesto sin cargo y garantía escrita en cada trabajo.
@@ -277,57 +328,147 @@ export default function App() {
             </div>
 
             <div className={`grid grid-cols-3 gap-4 mt-10 pt-8 border-t border-white/12 reveal d4 ${heroIn ? "in" : ""}`}>
-              {[["500+", "Trabajos por mes"], ["4.9★", "Calificación"], ["15+", "Años de oficio"]].map(([v, l]) => (
+              {[["500+", "Trabajos por mes"], ["4.9", "Calificación"], ["15+", "Años de oficio"]].map(([v, l]) => (
                 <div key={l}>
-                  <div className="font-display text-2xl font-black text-white">{v}</div>
-                  <div className="text-white/45 text-xs mt-0.5">{l}</div>
+                  <div className="font-display text-2xl font-black text-white flex items-center gap-1">
+                    {v}
+                    {l === "Calificación" && <Star className="w-4 h-4 fill-amber-400 text-amber-400" />}
+                  </div>
+                  <div className="text-white/70 text-xs mt-0.5">{l}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Visual */}
-          <div className={`relative flex justify-center reveal d3 ${heroIn ? "in" : ""}`}>
-            <div className="floaty relative w-72">
-              <div className="glass rounded-3xl p-8 flex flex-col items-center gap-5">
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg,var(--aqua),var(--aqua-deep))" }}>
-                  <Wrench className="w-9 h-9 text-white" />
+          {/* Visual — live dispatch panel (no glass/blob cliché) */}
+          <div className={`relative flex justify-center md:justify-end reveal d3 ${heroIn ? "in" : ""}`}>
+            <div className="relative w-full max-w-[22rem]">
+              {/* aqua bloom */}
+              <div
+                aria-hidden
+                className="absolute -inset-10 -z-20 rounded-[3rem]"
+                style={{ background: "radial-gradient(60% 55% at 55% 40%, rgba(26,192,207,.22), transparent 72%)", filter: "blur(34px)" }}
+              />
+              {/* raised shelf — card rests on it (surface-1 → surface-2) */}
+              <div aria-hidden className="shelf absolute -z-10 -inset-x-5 top-9 -bottom-7 rounded-[2rem]" />
+              <div className="relative bg-white rounded-[1.6rem] ring-1 ring-black/5 overflow-hidden" style={{ boxShadow: "var(--elev-3)" }}>
+                {/* header */}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <Logo className="w-7 h-7" />
+                    <div className="leading-none">
+                      <div className="text-[10px] uppercase tracking-[.14em] text-slate-400 mb-1">Solicitud</div>
+                      <div className="text-sm font-bold text-ink">#AF-2481</div>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 ring-1 ring-emerald-100 px-2.5 py-1 rounded-full">
+                    <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" /><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" /></span>
+                    En camino
+                  </span>
                 </div>
-                <div className="text-center">
-                  <p className="font-display font-bold text-white text-lg">Tu técnico experto</p>
-                  <p className="text-white/55 text-sm mt-1">Matriculado y asegurado</p>
-                </div>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {["Destapes", "Pérdidas", "Calefones", "Gas"].map(t => (
-                    <span key={t} className="text-white/85 text-xs px-3 py-1 rounded-full" style={{ background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.16)" }}>{t}</span>
-                  ))}
-                </div>
-              </div>
 
-              <div className="floaty-slow absolute -top-5 -right-7 bg-white rounded-2xl shadow-[0_14px_40px_rgba(0,0,0,.18)] px-4 py-3 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                  <Check className="w-4 h-4 text-emerald-600" strokeWidth={3} />
+                {/* live mini-map — shows the plumber on the way */}
+                <div className="px-5 pt-4">
+                  <div className="relative h-28 overflow-hidden rounded-xl ring-1 ring-slate-100" style={{ background: "linear-gradient(135deg,#eaf4f7,#dfeaf3)" }}>
+                    <svg viewBox="0 0 320 120" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
+                      {/* streets */}
+                      <g stroke="#c7d7e1" strokeWidth="7" strokeLinecap="round" opacity=".55">
+                        <path d="M-10 44 H330" />
+                        <path d="M-10 90 H330" />
+                        <path d="M64 -10 V130" />
+                        <path d="M208 -10 V130" />
+                      </g>
+                      {/* route */}
+                      <path id="afRoute" d="M36 98 C92 98 104 46 168 44 S252 30 292 26" fill="none" stroke="var(--aqua)" strokeWidth="3" strokeLinecap="round" className="route-dash" />
+                      {/* destination — your home */}
+                      <g transform="translate(292,26)">
+                        <circle r="13" fill="var(--aqua-deep)" />
+                        <path d="M-5 1 L0 -4 L5 1 M-3.5 0 V5 H3.5 V0" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+                      </g>
+                      {/* moving technician */}
+                      <g>
+                        <circle r="8" fill="#0A1A2F" stroke="#fff" strokeWidth="2.5" />
+                        <animateMotion dur="4.2s" repeatCount="indefinite" calcMode="linear">
+                          <mpath href="#afRoute" />
+                        </animateMotion>
+                      </g>
+                    </svg>
+                    <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-ink ring-1 ring-black/5 backdrop-blur">
+                      <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-aqua opacity-75" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ background: "var(--aqua-deep)" }} /></span>
+                      Seguimiento en vivo
+                    </span>
+                    <span className="absolute bottom-2.5 right-2.5 rounded-md bg-ink/85 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur">Llega en 12 min</span>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-800 leading-tight">Disponible ahora</div>
-                  <div className="text-[11px] text-slate-400 leading-tight">Respuesta en 30 min</div>
-                </div>
-              </div>
 
-              <div className="absolute -bottom-5 -left-7 px-4 py-3 rounded-2xl text-white" style={{ background: "linear-gradient(135deg,var(--copper),#b9743a)", boxShadow: "0 14px 36px rgba(208,138,78,.4)" }}>
-                <div className="font-display font-black text-2xl leading-none">4.9</div>
-                <div className="flex gap-0.5 mt-1">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3 h-3 fill-white text-white" />)}
+                {/* technician + ETA */}
+                <div className="px-5 pt-5 pb-2 flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0" style={{ background: "linear-gradient(135deg,var(--aqua),var(--aqua-deep))" }}>JL</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-ink text-sm leading-tight">Jorge L.</div>
+                    <div className="flex items-center gap-1 text-[11px] text-slate-400"><BadgeCheck className="w-3 h-3 text-aqua-deep" /> Plomero matriculado</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-display font-black text-2xl text-ink leading-none">12<span className="text-sm font-bold text-slate-400 ml-0.5">min</span></div>
+                    <div className="flex items-center justify-end gap-0.5 text-[10px] text-slate-400 mt-1"><Navigation className="w-2.5 h-2.5" /> a 2,4 km</div>
+                  </div>
                 </div>
-                <div className="text-white/80 text-[11px] mt-1">+2.000 reseñas</div>
+
+                {/* timeline */}
+                <div className="px-5 py-5">
+                  <ol className="relative">
+                    {[
+                      ["Solicitud recibida", "Hace 6 min", true],
+                      ["Plomero asignado", "Hace 4 min", true],
+                      ["En camino a tu casa", "Ahora", "active"],
+                      ["Trabajo resuelto", "—", false],
+                    ].map(([t, time, st], i, arr) => (
+                      <li key={t as string} className="flex gap-3 pb-4 last:pb-0 relative">
+                        {i < arr.length - 1 && <span className="absolute left-[7px] top-4 bottom-0 w-px bg-slate-200" />}
+                        <span className={`relative z-10 mt-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${st === true ? "bg-aqua-deep" : st === "active" ? "ring-4 ring-aqua/25 bg-aqua-deep" : "bg-slate-200"}`}>
+                          {st === true && <Check className="w-2 h-2 text-white" strokeWidth={4} />}
+                        </span>
+                        <div className="flex-1 flex items-center justify-between -mt-0.5">
+                          <span className={`text-[13px] ${st ? "font-semibold text-ink" : "text-slate-400"}`}>{t}</span>
+                          <span className="text-[11px] text-slate-400">{time}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* footer rating */}
+                <div className="flex items-center justify-between px-5 py-3.5 bg-slate-50 border-t border-slate-100">
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />)}</div>
+                    <span className="text-xs font-bold text-ink">4,9</span>
+                  </div>
+                  <span className="text-[11px] text-slate-400">+2.000 trabajos resueltos</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 70" xmlns="http://www.w3.org/2000/svg" className="block w-full">
-            <path d="M0,38 C360,74 1080,2 1440,38 L1440,70 L0,70 Z" fill="white" />
+        {/* diagonal panel-cut divider — layered surfaces + elevation shadow */}
+        <div className="absolute inset-x-0 bottom-0 leading-none pointer-events-none">
+          <svg
+            viewBox="0 0 1440 140"
+            preserveAspectRatio="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="block w-full h-[72px] md:h-[120px]"
+          >
+            <defs>
+              <filter id="cutShadow" x="-5%" y="-120%" width="110%" height="320%">
+                <feDropShadow dx="0" dy="-12" stdDeviation="16" floodColor="#03101f" floodOpacity="0.5" />
+              </filter>
+            </defs>
+            {/* back slab (surface-1) — first elevation step */}
+            <polygon points="0,46 1440,8 1440,140 0,140" fill="var(--surface-1)" />
+            {/* front white surface, raised with shadow over the dark hero */}
+            <polygon points="0,84 1440,44 1440,140 0,140" fill="#ffffff" filter="url(#cutShadow)" />
+            {/* aqua accent riding the cut edge */}
+            <line x1="0" y1="84" x2="1440" y2="44" stroke="var(--aqua)" strokeWidth="2.5" />
           </svg>
         </div>
       </section>
@@ -354,7 +495,7 @@ export default function App() {
       </div>
 
       {/* SERVICES */}
-      <section id="servicios" className="py-24 bg-white" ref={servRef}>
+      <section id="servicios" className="py-24 bg-[#f3f8fb]" ref={servRef}>
         <div className="max-w-6xl mx-auto px-6">
           <div className={`max-w-2xl mb-14 reveal ${servIn ? "in" : ""}`}>
             <p className="eyebrow mb-3"><Droplets className="w-3.5 h-3.5" /> Lo que resolvemos</p>
@@ -363,7 +504,7 @@ export default function App() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {SERVICES.map(({ Icon, title, desc }, i) => (
-              <div key={title} className={`card group bg-white border border-slate-100 rounded-2xl p-7 shadow-[0_1px_2px_rgba(15,23,42,.04)] reveal d${(i % 3) + 1} ${servIn ? "in" : ""}`}>
+              <div key={title} className={`card group bg-white border border-slate-100/80 ring-1 ring-slate-900/[.03] rounded-2xl p-7 reveal d${(i % 3) + 1} ${servIn ? "in" : ""}`}>
                 <div className="icon-tile w-12 h-12 rounded-xl flex items-center justify-center mb-5">
                   <Icon className="w-6 h-6" />
                 </div>
@@ -380,11 +521,14 @@ export default function App() {
 
       {/* STATS BAND */}
       <section className="ink-grad py-16 relative overflow-hidden">
-        <div className="hatch absolute inset-0" />
+        <Blueprint className="blueprint opacity-50" />
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-5 relative z-10">
-          {STATS.map(({ value, label }) => (
+          {STATS.map(({ value, label, star }) => (
             <div key={label} className="glass rounded-2xl text-center py-7 px-4">
-              <div className="font-display text-[2.4rem] font-black text-white leading-none">{value}</div>
+              <div className="font-display text-[2.4rem] font-black text-white leading-none flex items-center justify-center gap-1.5">
+                {value}
+                {star && <Star className="w-5 h-5 fill-amber-400 text-amber-400" />}
+              </div>
               <div className="text-white/55 text-sm mt-2">{label}</div>
             </div>
           ))}
@@ -417,20 +561,55 @@ export default function App() {
       <section id="nosotros" className="py-24 bg-white" ref={aboutRef}>
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
           <div className={`relative reveal ${aboutIn ? "in" : ""}`}>
-            <div className="rounded-3xl overflow-hidden h-80 flex items-center justify-center relative" style={{ background: "linear-gradient(135deg,#dff7f9,#e8f3fb)" }}>
-              <div className="absolute left-5 top-5 w-2 h-48 rounded-full" style={{ background: "linear-gradient(180deg,var(--aqua),var(--aqua-deep))" }} />
-              <div className="absolute right-12 top-9 w-2 h-32 rounded-full opacity-40" style={{ background: "linear-gradient(180deg,var(--aqua),var(--aqua-deep))" }} />
-              <div className="text-center px-8">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "linear-gradient(135deg,var(--aqua),var(--aqua-deep))", boxShadow: "0 12px 30px -8px rgba(12,143,160,.5)" }}>
-                  <ShieldCheck className="w-8 h-8 text-white" />
+            {/* aqua bloom for depth */}
+            <div aria-hidden className="absolute -inset-6 -z-10 rounded-[2.6rem]" style={{ background: "radial-gradient(60% 60% at 38% 28%, rgba(26,192,207,.18), transparent 70%)", filter: "blur(28px)" }} />
+
+            {/* credential panel */}
+            <div className="relative rounded-3xl bg-white ring-1 ring-slate-100 overflow-hidden" style={{ boxShadow: "var(--elev-3)" }}>
+              {/* dark header — the credential */}
+              <div className="relative overflow-hidden px-6 pt-6 pb-5" style={{ background: "linear-gradient(135deg,#0e2740,#0b2036)" }}>
+                <div aria-hidden className="absolute -right-10 -top-12 h-40 w-40 rounded-full" style={{ background: "radial-gradient(circle, rgba(26,192,207,.28), transparent 70%)" }} />
+                <div className="relative flex items-center gap-3.5">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl shrink-0" style={{ background: "linear-gradient(135deg,var(--aqua),var(--aqua-deep))", boxShadow: "0 12px 28px -8px rgba(12,143,160,.6)" }}>
+                    <ShieldCheck className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] uppercase tracking-[.16em] text-white/45">Credencial</div>
+                    <div className="font-display text-lg font-bold leading-tight text-white">Plomero matriculado</div>
+                    <div className="mt-0.5 flex items-center gap-1 text-[11px] text-aqua"><BadgeCheck className="h-3 w-3" /> Matrícula N° 12.345 · verificada</div>
+                  </div>
                 </div>
-                <p className="font-display font-bold text-ink text-xl">Reparaciones profesionales</p>
-                <p className="text-slate-500 text-sm mt-1">Garantía escrita en cada trabajo</p>
+              </div>
+
+              {/* seal grid */}
+              <div className="grid grid-cols-2 gap-px bg-slate-100">
+                {[
+                  { Icon: ShieldCheck, t: "Garantía", s: "15 años por escrito" },
+                  { Icon: Clock, t: "Disponibilidad", s: "24 hs · 365 días" },
+                  { Icon: BadgeCheck, t: "Matriculados", s: "Agua y gas habilitado" },
+                  { Icon: Star, t: "Reseñas", s: "4,9 / 5 promedio" },
+                ].map(({ Icon, t, s }) => (
+                  <div key={t} className="flex items-start gap-3 bg-white px-5 py-4">
+                    <div className="icon-tile flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"><Icon className="h-4 w-4" /></div>
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-ink">{t}</div>
+                      <div className="text-[11px] text-slate-400">{s}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* footer — seguro */}
+              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-6 py-3.5">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-ink"><ShieldCheck className="h-3.5 w-3.5 text-aqua-deep" /> Personal con seguro (ART)</span>
+                <span className="text-[11px] text-slate-400">+2.000 trabajos</span>
               </div>
             </div>
-            <div className="absolute -bottom-5 -right-5 rounded-2xl text-white px-6 py-4" style={{ background: "linear-gradient(135deg,var(--copper),#b9743a)", boxShadow: "0 14px 36px rgba(208,138,78,.4)" }}>
-              <div className="font-display font-black text-2xl">15+</div>
-              <div className="text-white/80 text-xs mt-0.5">Años de servicio</div>
+
+            {/* floating copper badge */}
+            <div className="floaty-slow absolute -bottom-5 -right-4 rounded-2xl px-5 py-3.5 text-white" style={{ background: "linear-gradient(135deg,var(--copper),#b9743a)", boxShadow: "0 16px 36px -10px rgba(208,138,78,.55)" }}>
+              <div className="font-display text-2xl font-black leading-none">15+</div>
+              <div className="mt-0.5 text-[11px] text-white/85">Años de oficio</div>
             </div>
           </div>
 
@@ -473,7 +652,7 @@ export default function App() {
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {TESTIMONIALS.map(({ name, role, text, rating }, i) => (
-              <div key={name} className={`card bg-white rounded-2xl p-7 border border-slate-100 shadow-[0_1px_2px_rgba(15,23,42,.04)] reveal d${i + 1} ${testiIn ? "in" : ""}`}>
+              <div key={name} className={`card bg-white rounded-2xl p-7 border border-slate-100/80 ring-1 ring-slate-900/[.03] reveal d${i + 1} ${testiIn ? "in" : ""}`}>
                 <div className="flex gap-0.5 mb-4">
                   {Array.from({ length: rating }).map((_, j) => <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
                 </div>
@@ -523,8 +702,8 @@ export default function App() {
 
       {/* BOTTOM CTA */}
       <section className="ink-grad py-20 relative overflow-hidden">
-        <div className="hatch absolute inset-0" />
-        <div className="blob w-96 h-96" style={{ background: "rgba(26,192,207,.2)", top: "-3rem", right: "10%" }} />
+        <Blueprint className="blueprint opacity-50" />
+        <div className="glow w-96 h-96" style={{ background: "rgba(26,192,207,.18)", top: "-3rem", right: "10%" }} />
         <div className="max-w-2xl mx-auto px-6 text-center relative z-10">
           <p className="eyebrow eyebrow-l mb-4 justify-center"><Clock className="w-3.5 h-3.5" /> Disponibles 24 hs</p>
           <h2 className="font-display text-4xl md:text-5xl font-black text-white leading-[1.08] tracking-tight mb-4">

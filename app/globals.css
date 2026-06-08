@@ -14,6 +14,23 @@
   --color-aqua: #1ac0cf;
   --color-aqua-deep: #0c8fa0;
   --color-copper: #d08a4e;
+
+  /* Construccion (ReusRoof) brand palette — industrial red + graphite */
+  --color-steel: #0e1116;
+  --color-steel-soft: #171c22;
+  --color-signal: #dc2626;
+  --color-signal-deep: #b91c1c;
+
+  /* Surface elevation scale (dark hero context) — bg-surface-0/1/2 */
+  --color-surface-0: #08172a; /* base, deepest */
+  --color-surface-1: #0f2942; /* raised panel / shelf */
+  --color-surface-2: #ffffff; /* elevated card */
+
+  /* Elevation shadow scale (shared) — shadow-e1/e2/e3.
+     e1 = resting card, e2 = raised card, e3 = floating panel/hover. */
+  --shadow-e1: 0 1px 2px rgba(2, 8, 23, 0.05), 0 1px 3px rgba(2, 8, 23, 0.06);
+  --shadow-e2: 0 4px 10px -2px rgba(2, 8, 23, 0.1), 0 2px 6px -2px rgba(2, 8, 23, 0.07);
+  --shadow-e3: 0 20px 40px -18px rgba(2, 8, 23, 0.28), 0 8px 18px -10px rgba(2, 8, 23, 0.16);
 }
 
 * {
