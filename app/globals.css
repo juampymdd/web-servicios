@@ -8,6 +8,12 @@
   --font-sans: var(--app-font-sans, ui-sans-serif, system-ui, sans-serif);
   --font-display: var(--app-font-display, var(--font-sans));
   --font-mono: var(--app-font-mono, ui-monospace, monospace);
+
+  /* Plomeria (AquaFix) brand palette — used via text-/bg-/border- utilities */
+  --color-ink: #0a1a2f;
+  --color-aqua: #1ac0cf;
+  --color-aqua-deep: #0c8fa0;
+  --color-copper: #d08a4e;
 }
 
 * {

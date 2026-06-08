@@ -2,38 +2,107 @@
 
 import { useState, useEffect, useRef, type RefObject } from "react";
 import {
-  Wrench, CheckCircle, Star, Menu, X, Check,
-  Phone, MessageCircle, Info, Droplets, Users,
-  ChevronRight, Shield, Zap, Award
+  Wrench, ShieldCheck, Star, Menu, X, Check,
+  Phone, MessageCircle, Droplets, Clock, BadgeCheck,
+  ChevronRight, ChevronDown, Zap, Flame, ShowerHead,
+  Gauge, PiggyBank, MapPin, Mail, ArrowRight, Navigation,
 } from "lucide-react";
 
-function WhatsAppIcon({ className }: { className?: string }) {
+/* ── Brand mark ─────────────────────────────────────────────── */
+function Logo({ className = "w-8 h-8" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+    <svg className={className} viewBox="0 0 32 32" fill="none" aria-hidden>
+      <rect width="32" height="32" rx="9" fill="url(#lg)" />
+      <path
+        d="M16 7c-2.6 3-5 5.7-5 8.6A5 5 0 0 0 16 20a5 5 0 0 0 5-4.4c0-2.9-2.4-5.6-5-8.6Z"
+        fill="#fff"
+      />
+      <circle cx="14.4" cy="15" r="1.5" fill="#1AC0CF" opacity=".9" />
+      <defs>
+        <linearGradient id="lg" x1="0" y1="0" x2="32" y2="32">
+          <stop stopColor="#0C8FA0" />
+          <stop offset="1" stopColor="#0A1A2F" />
+        </linearGradient>
+      </defs>
     </svg>
   );
 }
 
+/* Technical pipe-blueprint backdrop — replaces the generic grid/blob cliché */
+function Blueprint({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 640 600" fill="none" preserveAspectRatio="xMidYMid slice" aria-hidden>
+      <g stroke="rgba(26,192,207,.16)" strokeWidth="1.5" strokeLinecap="round">
+        <path d="M-20 110 H210 V30" />
+        <path d="M120 -20 V200 H470 V90" />
+        <path d="M-20 300 H300 V470 H560" />
+        <path d="M640 240 H410 V360 H210 V620" />
+        <path d="M540 -20 V150 H620" />
+        <path d="M40 620 V430 H300" />
+      </g>
+      {/* valves / joints */}
+      <g fill="#0a1a2f" stroke="rgba(26,192,207,.45)" strokeWidth="1.5">
+        {[[210, 110], [470, 200], [300, 470], [410, 240], [120, 200], [300, 300]].map(([x, y]) => (
+          <circle key={`${x}-${y}`} cx={x} cy={y} r="5" />
+        ))}
+      </g>
+      {/* live water flow */}
+      <path className="flow" d="M-20 300 H300 V470 H560" stroke="var(--aqua)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="2 14" opacity=".7" />
+    </svg>
+  );
+}
+
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+    </svg>
+  );
+}
+
+/* ── Content ────────────────────────────────────────────────── */
+const NAV = ["Servicios", "Proceso", "Nosotros", "Opiniones"];
+
 const SERVICES = [
-  { Icon: Zap, title: "Respuesta Inmediata", desc: "Llegamos en menos de 60 minutos ante cualquier emergencia, los 365 días del año." },
-  { Icon: Award, title: "Calidad Garantizada", desc: "Trabajamos solo con materiales certificados y ofrecemos garantía escrita en cada servicio." },
-  { Icon: Shield, title: "Técnicos Certificados", desc: "Todo nuestro personal está habilitado, asegurado y con más de 10 años de experiencia." },
+  { Icon: Zap, title: "Urgencias 24/7", desc: "Pérdidas, inundaciones y caños rotos. Respondemos cualquier día y horario, sin recargo oculto." },
+  { Icon: ShowerHead, title: "Destapes", desc: "Cloacas, pluviales y desagües con máquina rotativa e hidrojet. Sin romper, sin escombros." },
+  { Icon: Flame, title: "Calefones y termotanques", desc: "Instalación, reparación y service de calefones, termotanques y calderas de todas las marcas." },
+  { Icon: Droplets, title: "Detección de pérdidas", desc: "Geófono y cámara térmica para encontrar la fuga exacta sin picar paredes de más." },
+  { Icon: Wrench, title: "Griferías y sanitarios", desc: "Cambio de grifos, mochilas, flexibles y bachas. Trabajo prolijo y materiales certificados." },
+  { Icon: Gauge, title: "Redes de agua y gas", desc: "Renovación de cañerías, presurizadores y conexiones. Matriculados y habilitados." },
 ];
 
 const STATS = [
-  { value: "15+", label: "Años en el mercado" },
-  { value: "2.400+", label: "Clientes satisfechos" },
-  { value: "60 min", label: "Tiempo de respuesta" },
-  { value: "100%", label: "Garantía de trabajo" },
+  { value: "15+", label: "Años en el oficio" },
+  { value: "2.400+", label: "Clientes atendidos" },
+  { value: "<60min", label: "En tu casa" },
+  { value: "4.9★", label: "Promedio de reseñas" },
+];
+
+const PROCESS = [
+  { n: "01", title: "Contactás", desc: "Llamás o nos escribís por WhatsApp. Te respondemos al toque, sin contestadores." },
+  { n: "02", title: "Diagnosticamos", desc: "Vamos al lugar, revisamos y te pasamos un presupuesto claro antes de tocar nada." },
+  { n: "03", title: "Resolvemos", desc: "Lo arreglamos en el día con materiales certificados y dejamos todo limpio." },
+  { n: "04", title: "Garantizamos", desc: "Te entregamos garantía escrita. Si algo falla, volvemos sin cargo." },
 ];
 
 const TESTIMONIALS = [
-  { name: "María González", role: "Propietaria", text: "Llegaron rápido, resolvieron la fuga en minutos y dejaron todo limpio. Muy recomendables.", rating: 5 },
-  { name: "Carlos Fernández", role: "Administrador", text: "Los contrato para mantenimiento mensual del edificio. Puntuales, profesionales y honestos.", rating: 5 },
-  { name: "Ana López", role: "Dueña de negocio", text: "Emergencia a medianoche y respondieron al instante. Precios justos, trabajo impecable.", rating: 5 },
+  { name: "María González", role: "Palermo, CABA", text: "Llegaron rápido, resolvieron la fuga en minutos y dejaron todo limpio. Muy recomendables.", rating: 5 },
+  { name: "Carlos Fernández", role: "Admin. de consorcio", text: "Los contrato para el mantenimiento mensual del edificio. Puntuales, profesionales y honestos.", rating: 5 },
+  { name: "Ana López", role: "Local gastronómico", text: "Emergencia a medianoche y respondieron al instante. Precios justos, trabajo impecable.", rating: 5 },
 ];
 
+const FAQS = [
+  { q: "¿Atienden urgencias de madrugada?", a: "Sí. Trabajamos las 24 horas, los 365 días del año. Para emergencias llegamos en menos de 60 minutos a la mayoría de las zonas." },
+  { q: "¿El presupuesto tiene costo?", a: "No. El diagnóstico en el lugar y el presupuesto son sin cargo. Solo cobrás si aprobás el trabajo." },
+  { q: "¿Son plomeros matriculados?", a: "Todos nuestros técnicos están matriculados, asegurados y habilitados para trabajos de agua y gas." },
+  { q: "¿Qué garantía dan?", a: "Entregamos garantía escrita en cada servicio. Si el problema reaparece dentro del plazo, volvemos sin cargo." },
+];
+
+const WA = "https://wa.me/5491100000000";
+const TEL = "tel:+5491100000000";
+
+/* ── Scroll reveal ──────────────────────────────────────────── */
 function useInView<T extends Element>(threshold = 0.12) {
   const ref = useRef<T | null>(null);
   const [inView, setInView] = useState(false);
@@ -48,10 +117,13 @@ function useInView<T extends Element>(threshold = 0.12) {
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [faq, setFaq] = useState<number | null>(0);
   const [heroRef, heroIn] = useInView<HTMLDivElement>(0.05);
   const [servRef, servIn] = useInView<HTMLElement>();
+  const [procRef, procIn] = useInView<HTMLElement>();
   const [aboutRef, aboutIn] = useInView<HTMLElement>();
   const [testiRef, testiIn] = useInView<HTMLElement>();
+  const [faqRef, faqIn] = useInView<HTMLElement>();
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
@@ -60,206 +132,181 @@ export default function App() {
   }, []);
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} className="bg-white text-slate-900 overflow-x-hidden">
+    <div className="bg-white text-ink overflow-x-hidden selection:bg-aqua/25">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300&display=swap');
-        .display { font-family: 'Fraunces', serif; }
-        .reveal { opacity:0; transform:translateY(28px); transition: opacity .65s ease, transform .65s ease; }
-        .reveal.in { opacity:1; transform:none; }
-        .reveal.d1 { transition-delay:.1s }
-        .reveal.d2 { transition-delay:.22s }
-        .reveal.d3 { transition-delay:.36s }
-        .reveal.d4 { transition-delay:.5s }
-        .reveal.d5 { transition-delay:.62s }
-        .nav-link { position:relative; }
-        .nav-link::after { content:''; position:absolute; bottom:-2px; left:0; width:0; height:2px; background:#2563eb; transition:width .25s ease; border-radius:2px; }
-        .nav-link:hover::after { width:100%; }
-        .card-lift { transition: transform .28s cubic-bezier(.4,0,.2,1), box-shadow .28s ease; }
-        .card-lift:hover { transform:translateY(-5px); box-shadow:0 18px 40px rgba(37,99,235,.11); }
-        .wa-float {
-          position:fixed; bottom:28px; right:28px; z-index:100;
-          width:56px; height:56px; border-radius:50%;
-          background:#25D366;
-          display:flex; align-items:center; justify-content:center;
-          box-shadow: 0 4px 20px rgba(37,211,102,.5);
-          transition: transform .2s ease, box-shadow .2s ease;
-          cursor:pointer; border:none;
+        :root {
+          --ink:#0A1A2F; --ink-soft:#11304f;
+          --aqua:#1AC0CF; --aqua-deep:#0C8FA0;
+          --copper:#D08A4E; --copper-soft:#E7B486;
         }
-        .wa-float:hover { transform:scale(1.1); box-shadow:0 8px 28px rgba(37,211,102,.65); }
-        .wa-float::before {
-          content:''; position:absolute; inset:-5px; border-radius:50%;
-          border:2px solid rgba(37,211,102,.4);
-          animation: ring 2.2s ease-out infinite;
-        }
-        @keyframes ring {
-          0%   { transform:scale(1);   opacity:.8; }
-          100% { transform:scale(1.5); opacity:0; }
-        }
-        .hero-grid {
-          background-image:
-            linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
-          background-size: 48px 48px;
-        }
-        .blob {
-          position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none;
-        }
-        .tag-pill {
-          display:inline-flex; align-items:center; gap:6px;
-          background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.2);
-          color:rgba(255,255,255,.85); font-size:.72rem; font-weight:600;
-          letter-spacing:.08em; text-transform:uppercase;
-          padding:6px 14px; border-radius:100px;
-        }
-        .stat-card {
-          background:rgba(255,255,255,.07);
-          border:1px solid rgba(255,255,255,.12);
-          border-radius:16px; padding:20px 24px;
-          backdrop-filter:blur(8px);
-        }
-        .badge {
-          background:white; border-radius:14px;
-          box-shadow:0 8px 32px rgba(0,0,0,.12);
-          padding:12px 16px;
-        }
-        .cta-btn {
-          background:#2563eb;
-          transition:background .2s, transform .2s, box-shadow .2s;
-          box-shadow:0 4px 16px rgba(37,99,235,.35);
-        }
-        .cta-btn:hover { background:#1d4ed8; transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,99,235,.45); }
-        .ghost-btn {
-          border:1.5px solid rgba(255,255,255,.45);
-          transition:background .2s, border-color .2s;
-        }
-        .ghost-btn:hover { background:rgba(255,255,255,.12); border-color:white; }
-        .dark-btn {
-          border:1.5px solid #e2e8f0;
-          transition:border-color .2s, color .2s;
-        }
-        .dark-btn:hover { border-color:#2563eb; color:#2563eb; }
-        .section-tag { color:#2563eb; font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
-        .float-anim { animation: floatY 3.2s ease-in-out infinite; }
-        .float-anim-slow { animation: floatY 4s ease-in-out infinite; animation-delay:1.5s; }
-        @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .ink-grad{background:radial-gradient(120% 120% at 78% 8%,#16466e 0%,#0d2742 42%,#0A1A2F 100%)}
+        .blueprint{position:absolute;inset:0;width:100%;height:100%;mask-image:radial-gradient(95% 85% at 60% 35%,#000 40%,transparent 100%)}
+        .flow{animation:flow 1s linear infinite}
+        @keyframes flow{to{stroke-dashoffset:-32}}
+        .glow{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none}
+
+        .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}
+        .reveal.in{opacity:1;transform:none}
+        .d1{transition-delay:.08s}.d2{transition-delay:.18s}.d3{transition-delay:.3s}
+        .d4{transition-delay:.42s}.d5{transition-delay:.54s}.d6{transition-delay:.66s}
+
+        .eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--aqua-deep)}
+        .eyebrow-l{color:var(--copper-soft)}
+
+        .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.9);font-size:.74rem;font-weight:600;letter-spacing:.04em;padding:7px 15px;border-radius:100px;backdrop-filter:blur(6px)}
+
+        .btn-primary{background:linear-gradient(135deg,var(--aqua) 0%,var(--aqua-deep) 100%);color:#fff;box-shadow:0 8px 22px -6px rgba(12,143,160,.6);transition:transform .2s,box-shadow .2s,filter .2s}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px -6px rgba(12,143,160,.7);filter:saturate(1.1)}
+        .btn-ghost{border:1.5px solid rgba(255,255,255,.4);color:#fff;transition:background .2s,border-color .2s}
+        .btn-ghost:hover{background:rgba(255,255,255,.12);border-color:#fff}
+        .btn-wa{background:#25D366;color:#fff;box-shadow:0 8px 22px -6px rgba(37,211,102,.6);transition:transform .2s,box-shadow .2s}
+        .btn-wa:hover{transform:translateY(-2px);box-shadow:0 14px 30px -6px rgba(37,211,102,.7)}
+        .btn-line{border:1.5px solid #e2e8f0;color:#334155;transition:border-color .2s,color .2s,background .2s}
+        .btn-line:hover{border-color:var(--aqua-deep);color:var(--aqua-deep);background:#f0fbfc}
+
+        .nav-link{position:relative}
+        .nav-link::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:2px;border-radius:2px;background:var(--aqua-deep);transition:width .25s ease}
+        .nav-link:hover::after{width:100%}
+
+        .card{transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s,border-color .3s}
+        .card:hover{transform:translateY(-6px);box-shadow:0 26px 50px -22px rgba(10,26,47,.28);border-color:#cdeef1}
+
+        .icon-tile{background:linear-gradient(135deg,#e7fbfd,#d2f1f4);color:var(--aqua-deep)}
+        .glass{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(16px)}
+
+        .wa-float{position:fixed;bottom:24px;right:24px;z-index:60;width:58px;height:58px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 26px rgba(37,211,102,.5);transition:transform .2s}
+        .wa-float:hover{transform:scale(1.08)}
+        .wa-float::before{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid rgba(37,211,102,.45);animation:ring 2.2s ease-out infinite}
+        @keyframes ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.55);opacity:0}}
+
+        .marquee{display:flex;gap:3.5rem;animation:scroll 26s linear infinite;white-space:nowrap}
+        @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+        .floaty{animation:floaty 3.6s ease-in-out infinite}
+        .floaty-slow{animation:floaty 4.6s ease-in-out infinite;animation-delay:1.2s}
+        @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+
+        @media (prefers-reduced-motion:reduce){.reveal,.floaty,.floaty-slow,.marquee,.wa-float::before{animation:none!important;transition:none!important;opacity:1!important;transform:none!important}}
       `}</style>
 
-      {/* WA FLOATING BUTTON */}
-      <a href="https://wa.me/5491100000000" target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="WhatsApp">
-        <WhatsAppIcon className="w-6 h-6 text-white" />
+      {/* WHATSAPP FLOAT */}
+      <a href={WA} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Escribinos por WhatsApp">
+        <WhatsAppIcon className="w-7 h-7" />
       </a>
 
+      {/* UTILITY BAR */}
+      <div className="ink-grad text-white/80 text-[13px] hidden md:block border-b border-white/5">
+        <div className="max-w-6xl mx-auto px-6 h-9 flex items-center justify-between">
+          <div className="flex items-center gap-2"><BadgeCheck className="w-3.5 h-3.5 text-aqua" /> Plomeros matriculados y asegurados</div>
+          <div className="flex items-center gap-5">
+            <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-aqua" /> Atención 24 hs, los 365 días</span>
+            <a href={TEL} className="flex items-center gap-1.5 hover:text-white transition-colors"><Phone className="w-3.5 h-3.5 text-aqua" /> +54 9 11 0000-0000</a>
+          </div>
+        </div>
+      </div>
+
       {/* NAVBAR */}
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100" : "bg-transparent"}`}>
+      <header className={`fixed left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "top-0 bg-white/90 backdrop-blur-md shadow-[0_1px_0_rgba(15,23,42,.06)]" : "md:top-9 top-0 bg-transparent"}`}>
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <a href="#" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-md shadow-blue-200">
-              <Droplets className="w-4 h-4 text-white" />
-            </div>
-            <span className={`font-bold text-[17px] tracking-tight ${scrolled ? "text-slate-900" : "text-white"}`}>AquaFix</span>
+          <a href="#top" className="flex items-center gap-2.5">
+            <Logo />
+            <span className={`font-display font-bold text-[19px] tracking-tight ${scrolled ? "text-ink" : "text-white"}`}>
+              Aqua<span style={{ color: scrolled ? "#0C8FA0" : "#1AC0CF" }}>Fix</span>
+            </span>
           </a>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-7">
-            {["Nosotros","Servicios","Proyectos","Contacto"].map(l => (
-              <a key={l} href="#" className={`nav-link text-sm font-medium transition-colors ${scrolled ? "text-slate-600 hover:text-slate-900" : "text-white/80 hover:text-white"}`}>{l}</a>
+          <nav className="hidden md:flex items-center gap-8">
+            {NAV.map(l => (
+              <a key={l} href={`#${l.toLowerCase()}`} className={`nav-link text-sm font-medium transition-colors ${scrolled ? "text-slate-600 hover:text-ink" : "text-white/85 hover:text-white"}`}>{l}</a>
             ))}
           </nav>
 
-          {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <a href="tel:+5491100000000" className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${scrolled ? "text-slate-600 hover:text-blue-600" : "text-white/80 hover:text-white"}`}>
-              <Phone className="w-3.5 h-3.5" /> Llamar
+            <a href={TEL} className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${scrolled ? "text-slate-700 hover:text-aqua-deep" : "text-white/85 hover:text-white"}`}>
+              <Phone className="w-4 h-4" /> Llamar
             </a>
-            <button className="cta-btn text-white text-sm font-semibold px-5 py-2.5 rounded-xl">
-              Solicitar servicio
-            </button>
+            <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary text-sm font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2">
+              Pedir plomero <ArrowRight className="w-4 h-4" />
+            </a>
           </div>
 
-          {/* Mobile toggle */}
-          <button onClick={() => setMenuOpen(o => !o)} className={`md:hidden p-1 ${scrolled ? "text-slate-800" : "text-white"}`}>
-            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          <button onClick={() => setMenuOpen(o => !o)} aria-label="Menú" className={`md:hidden p-1 ${scrolled ? "text-ink" : "text-white"}`}>
+            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
 
-        {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-100 px-6 py-5 flex flex-col gap-4 shadow-lg">
-            {["Nosotros","Servicios","Proyectos","Contacto"].map(l => (
-              <a key={l} href="#" className="text-slate-700 font-medium text-sm">{l}</a>
+          <div className="md:hidden bg-white border-t border-slate-100 px-6 py-5 flex flex-col gap-4 shadow-xl">
+            {NAV.map(l => (
+              <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setMenuOpen(false)} className="text-slate-700 font-medium">{l}</a>
             ))}
-            <button className="cta-btn text-white text-sm font-semibold px-5 py-3 rounded-xl text-center mt-1">
-              Solicitar servicio
-            </button>
+            <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary font-semibold px-5 py-3 rounded-xl text-center">Pedir plomero</a>
           </div>
         )}
       </header>
 
       {/* HERO */}
-      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: "linear-gradient(135deg,#0f2851 0%,#1a4fa0 45%,#1e7fd4 100%)" }}>
-        <div className="hero-grid absolute inset-0" />
-        <div className="blob w-96 h-96 bg-blue-400/20 top-10 right-10" />
-        <div className="blob w-72 h-72 bg-sky-300/15 bottom-20 left-20" />
+      <section id="top" className="relative ink-grad min-h-screen flex items-center overflow-hidden">
+        <Blueprint className="blueprint" />
+        <div className="glow w-[26rem] h-[26rem]" style={{ background: "rgba(26,192,207,.16)", top: "-5rem", right: "-2rem" }} />
 
-        <div className="max-w-6xl mx-auto px-6 pt-24 pb-20 w-full grid md:grid-cols-2 gap-16 items-center relative z-10" ref={heroRef}>
-          {/* Left */}
+        <div className="max-w-6xl mx-auto px-6 pt-28 md:pt-24 pb-24 w-full grid md:grid-cols-2 gap-14 items-center relative z-10" ref={heroRef}>
+          {/* Copy */}
           <div>
-            <div className={`reveal ${heroIn?"in":""}`}>
-              <span className="tag-pill mb-6 inline-flex">
-                <CheckCircle className="w-3 h-3" /> Servicio profesional garantizado
+            <div className={`reveal ${heroIn ? "in" : ""}`}>
+              <span className="pill mb-6">
+                <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" /></span>
+                Disponibles ahora · respuesta &lt; 60 min
               </span>
             </div>
-            <h1 className={`display text-[clamp(2.8rem,6vw,4.2rem)] font-black text-white leading-[1.0] mb-6 reveal d1 ${heroIn?"in":""}`}>
-              Reparaciones<br />
-              <em className="not-italic text-sky-300">Plomería</em><br />
-              Experta
+            <h1 className={`font-display text-[clamp(2.7rem,6vw,4.3rem)] font-black text-white leading-[1.02] tracking-[-.02em] mb-6 reveal d1 ${heroIn ? "in" : ""}`}>
+              Tu plomero<br />
+              de confianza,<br />
+              <span className="italic" style={{ color: "var(--aqua)" }}>cuando lo necesitás.</span>
             </h1>
-            <p className={`text-white/65 text-lg leading-relaxed max-w-md mb-8 reveal d2 ${heroIn?"in":""}`}>
-              Técnicos certificados para cualquier problema de plomería. Rápido, confiable y con garantía total en cada trabajo.
+            <p className={`text-white/70 text-lg leading-relaxed max-w-md mb-8 reveal d2 ${heroIn ? "in" : ""}`}>
+              Plomeros matriculados a domicilio. Urgencias, destapes, pérdidas y calefones. Presupuesto sin cargo y garantía escrita en cada trabajo.
             </p>
-            <div className={`flex flex-wrap gap-3 reveal d3 ${heroIn?"in":""}`}>
-              <button className="cta-btn text-white font-semibold px-7 py-3.5 rounded-xl text-sm flex items-center gap-2">
-                Ver servicios <ChevronRight className="w-4 h-4" />
-              </button>
-              <button className="ghost-btn text-white font-semibold px-7 py-3.5 rounded-xl text-sm flex items-center gap-2">
-                <Info className="w-4 h-4" /> Más información
-              </button>
+            <div className={`flex flex-wrap gap-3 reveal d3 ${heroIn ? "in" : ""}`}>
+              <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-wa font-semibold px-6 py-3.5 rounded-xl text-sm flex items-center gap-2">
+                <WhatsAppIcon className="w-4 h-4" /> Pedir presupuesto
+              </a>
+              <a href={TEL} className="btn-ghost font-semibold px-6 py-3.5 rounded-xl text-sm flex items-center gap-2">
+                <Phone className="w-4 h-4" /> Llamar ahora
+              </a>
             </div>
 
-            {/* Mini stats */}
-            <div className={`grid grid-cols-3 gap-4 mt-10 pt-8 border-t border-white/15 reveal d4 ${heroIn?"in":""}`}>
-              {[["500+","Trabajos/mes"],["4.9","Calificación"],["<60min","Respuesta"]].map(([v,l])=>(
+            <div className={`grid grid-cols-3 gap-4 mt-10 pt-8 border-t border-white/12 reveal d4 ${heroIn ? "in" : ""}`}>
+              {[["500+", "Trabajos por mes"], ["4.9★", "Calificación"], ["15+", "Años de oficio"]].map(([v, l]) => (
                 <div key={l}>
-                  <div className="display text-2xl font-black text-white">{v}</div>
+                  <div className="font-display text-2xl font-black text-white">{v}</div>
                   <div className="text-white/45 text-xs mt-0.5">{l}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Right — glassmorphism card */}
-          <div className={`relative flex justify-center reveal d2 ${heroIn?"in":""}`}>
-            <div className="float-anim relative w-72">
-              <div style={{ background:"rgba(255,255,255,.08)", border:"1px solid rgba(255,255,255,.15)", backdropFilter:"blur(16px)", borderRadius:"24px" }} className="p-8 flex flex-col items-center gap-5">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background:"rgba(255,255,255,.15)" }}>
-                  <Users className="w-10 h-10 text-sky-200" />
+          {/* Visual */}
+          <div className={`relative flex justify-center reveal d3 ${heroIn ? "in" : ""}`}>
+            <div className="floaty relative w-72">
+              <div className="glass rounded-3xl p-8 flex flex-col items-center gap-5">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg,var(--aqua),var(--aqua-deep))" }}>
+                  <Wrench className="w-9 h-9 text-white" />
                 </div>
                 <div className="text-center">
-                  <p className="display font-bold text-white text-lg">Tu Técnico Experto</p>
-                  <p className="text-white/55 text-sm mt-1">Certificado y asegurado</p>
+                  <p className="font-display font-bold text-white text-lg">Tu técnico experto</p>
+                  <p className="text-white/55 text-sm mt-1">Matriculado y asegurado</p>
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center">
-                  {["Tuberías","Grifos","Calefacción"].map(t=>(
-                    <span key={t} style={{ background:"rgba(255,255,255,.12)", border:"1px solid rgba(255,255,255,.18)" }} className="text-white/80 text-xs px-3 py-1 rounded-full">{t}</span>
+                  {["Destapes", "Pérdidas", "Calefones", "Gas"].map(t => (
+                    <span key={t} className="text-white/85 text-xs px-3 py-1 rounded-full" style={{ background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.16)" }}>{t}</span>
                   ))}
                 </div>
               </div>
 
-              {/* Badge disponible */}
-              <div className="badge float-anim-slow absolute -top-5 -right-8 flex items-center gap-2.5 min-w-max">
-                <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                  <Check className="w-3.5 h-3.5 text-emerald-600" strokeWidth={3} />
+              <div className="floaty-slow absolute -top-5 -right-7 bg-white rounded-2xl shadow-[0_14px_40px_rgba(0,0,0,.18)] px-4 py-3 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-emerald-600" strokeWidth={3} />
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-800 leading-tight">Disponible ahora</div>
@@ -267,42 +314,64 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Badge rating */}
-              <div className="absolute -bottom-5 -left-8 px-4 py-3 rounded-2xl text-white" style={{ background:"#2563eb", boxShadow:"0 8px 24px rgba(37,99,235,.4)" }}>
-                <div className="display font-black text-2xl leading-none">4.9</div>
+              <div className="absolute -bottom-5 -left-7 px-4 py-3 rounded-2xl text-white" style={{ background: "linear-gradient(135deg,var(--copper),#b9743a)", boxShadow: "0 14px 36px rgba(208,138,78,.4)" }}>
+                <div className="font-display font-black text-2xl leading-none">4.9</div>
                 <div className="flex gap-0.5 mt-1">
-                  {[1,2,3,4,5].map(i=><Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400"/>)}
+                  {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3 h-3 fill-white text-white" />)}
                 </div>
-                <div className="text-blue-200 text-[11px] mt-1">+2,000 reseñas</div>
+                <div className="text-white/80 text-[11px] mt-1">+2.000 reseñas</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Wave bottom */}
         <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 72" xmlns="http://www.w3.org/2000/svg" style={{display:"block"}}>
-            <path d="M0,36 C360,72 1080,0 1440,36 L1440,72 L0,72 Z" fill="white"/>
+          <svg viewBox="0 0 1440 70" xmlns="http://www.w3.org/2000/svg" className="block w-full">
+            <path d="M0,38 C360,74 1080,2 1440,38 L1440,70 L0,70 Z" fill="white" />
           </svg>
         </div>
       </section>
 
+      {/* TRUST MARQUEE */}
+      <div className="bg-white border-b border-slate-100 py-5 overflow-hidden">
+        <div className="marquee text-slate-400">
+          {[...Array(2)].map((_, k) => (
+            <div key={k} className="flex gap-14 items-center text-sm font-semibold tracking-wide shrink-0">
+              {[
+                [BadgeCheck, "Plomeros matriculados"],
+                [ShieldCheck, "Trabajo asegurado"],
+                [Clock, "Urgencias 24/7"],
+                [PiggyBank, "Presupuesto sin cargo"],
+                [Check, "Garantía escrita"],
+                [Gauge, "Materiales certificados"],
+              ].map(([Ic, t]) => {
+                const I = Ic as typeof BadgeCheck;
+                return <span key={t as string} className="flex items-center gap-2.5 shrink-0"><I className="w-4 h-4 text-aqua-deep" /> {t as string}</span>;
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* SERVICES */}
-      <section className="py-24 bg-white" ref={servRef}>
+      <section id="servicios" className="py-24 bg-white" ref={servRef}>
         <div className="max-w-6xl mx-auto px-6">
-          <div className={`text-center mb-14 reveal ${servIn?"in":""}`}>
-            <p className="section-tag mb-3">Lo que ofrecemos</p>
-            <h2 className="display text-4xl font-black text-slate-900">Por qué elegirnos</h2>
-            <p className="text-slate-500 mt-3 max-w-md mx-auto text-[15px]">Experiencia, rapidez y materiales de calidad para resolver cualquier problema de plomería.</p>
+          <div className={`max-w-2xl mb-14 reveal ${servIn ? "in" : ""}`}>
+            <p className="eyebrow mb-3"><Droplets className="w-3.5 h-3.5" /> Lo que resolvemos</p>
+            <h2 className="font-display text-[2.6rem] leading-[1.08] font-black text-ink tracking-tight">Todo lo de plomería,<br />en manos expertas.</h2>
+            <p className="text-slate-500 mt-4 text-[15px] leading-relaxed">Desde una canilla que gotea hasta la renovación completa de cañerías. Un solo equipo para cualquier problema de agua y gas.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-7">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {SERVICES.map(({ Icon, title, desc }, i) => (
-              <div key={title} className={`card-lift bg-slate-50 border border-slate-100 rounded-2xl p-8 reveal d${i+1} ${servIn?"in":""}`}>
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-5">
+              <div key={title} className={`card group bg-white border border-slate-100 rounded-2xl p-7 shadow-[0_1px_2px_rgba(15,23,42,.04)] reveal d${(i % 3) + 1} ${servIn ? "in" : ""}`}>
+                <div className="icon-tile w-12 h-12 rounded-xl flex items-center justify-center mb-5">
                   <Icon className="w-6 h-6" />
                 </div>
-                <h3 className="display font-bold text-slate-900 text-xl mb-2">{title}</h3>
-                <p className="text-slate-500 text-[15px] leading-relaxed">{desc}</p>
+                <h3 className="font-display font-bold text-ink text-xl mb-2">{title}</h3>
+                <p className="text-slate-500 text-[14.5px] leading-relaxed mb-4">{desc}</p>
+                <a href={WA} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-aqua-deep opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                  Pedir este servicio <ChevronRight className="w-4 h-4" />
+                </a>
               </div>
             ))}
           </div>
@@ -310,88 +379,111 @@ export default function App() {
       </section>
 
       {/* STATS BAND */}
-      <section style={{ background:"linear-gradient(135deg,#0f2851 0%,#1a4fa0 50%,#1e7fd4 100%)" }} className="py-16">
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6">
+      <section className="ink-grad py-16 relative overflow-hidden">
+        <div className="hatch absolute inset-0" />
+        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-5 relative z-10">
           {STATS.map(({ value, label }) => (
-            <div key={label} className="stat-card text-center">
-              <div className="display text-4xl font-black text-white">{value}</div>
-              <div className="text-white/55 text-sm mt-1">{label}</div>
+            <div key={label} className="glass rounded-2xl text-center py-7 px-4">
+              <div className="font-display text-[2.4rem] font-black text-white leading-none">{value}</div>
+              <div className="text-white/55 text-sm mt-2">{label}</div>
             </div>
           ))}
         </div>
       </section>
 
+      {/* PROCESS */}
+      <section id="proceso" className="py-24 bg-slate-50" ref={procRef}>
+        <div className="max-w-6xl mx-auto px-6">
+          <div className={`text-center max-w-xl mx-auto mb-14 reveal ${procIn ? "in" : ""}`}>
+            <p className="eyebrow mb-3 justify-center"><Zap className="w-3.5 h-3.5" /> Cómo trabajamos</p>
+            <h2 className="font-display text-[2.6rem] leading-[1.08] font-black text-ink tracking-tight">Simple, rápido y sin sorpresas</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {PROCESS.map(({ n, title, desc }, i) => (
+              <div key={n} className={`relative reveal d${i + 1} ${procIn ? "in" : ""}`}>
+                <div className="font-display text-5xl font-black mb-4" style={{ color: "var(--copper)" }}>{n}</div>
+                <h3 className="font-display font-bold text-ink text-lg mb-2">{title}</h3>
+                <p className="text-slate-500 text-[14.5px] leading-relaxed">{desc}</p>
+                {i < PROCESS.length - 1 && (
+                  <ChevronRight className="hidden lg:block absolute top-4 -right-3 w-5 h-5 text-slate-300" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ABOUT */}
-      <section className="py-24 bg-white" ref={aboutRef}>
+      <section id="nosotros" className="py-24 bg-white" ref={aboutRef}>
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
-          <div className={`relative reveal ${aboutIn?"in":""}`}>
-            <div className="rounded-3xl overflow-hidden h-80 flex items-center justify-center relative" style={{ background:"linear-gradient(135deg,#dbeafe,#e0f2fe)" }}>
-              <div className="absolute left-4 top-4 w-2 h-48 rounded-full" style={{ background:"linear-gradient(180deg,#3b82f6,#0ea5e9)" }} />
-              <div className="absolute right-10 top-8 w-2 h-32 rounded-full opacity-40" style={{ background:"linear-gradient(180deg,#3b82f6,#0ea5e9)" }} />
+          <div className={`relative reveal ${aboutIn ? "in" : ""}`}>
+            <div className="rounded-3xl overflow-hidden h-80 flex items-center justify-center relative" style={{ background: "linear-gradient(135deg,#dff7f9,#e8f3fb)" }}>
+              <div className="absolute left-5 top-5 w-2 h-48 rounded-full" style={{ background: "linear-gradient(180deg,var(--aqua),var(--aqua-deep))" }} />
+              <div className="absolute right-12 top-9 w-2 h-32 rounded-full opacity-40" style={{ background: "linear-gradient(180deg,var(--aqua),var(--aqua-deep))" }} />
               <div className="text-center px-8">
-                <div className="w-16 h-16 rounded-2xl bg-blue-600 shadow-lg shadow-blue-200 flex items-center justify-center mx-auto mb-4">
-                  <Wrench className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "linear-gradient(135deg,var(--aqua),var(--aqua-deep))", boxShadow: "0 12px 30px -8px rgba(12,143,160,.5)" }}>
+                  <ShieldCheck className="w-8 h-8 text-white" />
                 </div>
-                <p className="display font-bold text-slate-800 text-xl">Reparaciones Profesionales</p>
-                <p className="text-slate-500 text-sm mt-1">Garantía total en cada trabajo</p>
+                <p className="font-display font-bold text-ink text-xl">Reparaciones profesionales</p>
+                <p className="text-slate-500 text-sm mt-1">Garantía escrita en cada trabajo</p>
               </div>
             </div>
-            <div className="absolute -bottom-5 -right-5 rounded-2xl text-white px-6 py-4" style={{ background:"#2563eb", boxShadow:"0 8px 24px rgba(37,99,235,.4)" }}>
-              <div className="display font-black text-2xl">15+</div>
-              <div className="text-blue-200 text-xs mt-0.5">Años de servicio</div>
+            <div className="absolute -bottom-5 -right-5 rounded-2xl text-white px-6 py-4" style={{ background: "linear-gradient(135deg,var(--copper),#b9743a)", boxShadow: "0 14px 36px rgba(208,138,78,.4)" }}>
+              <div className="font-display font-black text-2xl">15+</div>
+              <div className="text-white/80 text-xs mt-0.5">Años de servicio</div>
             </div>
           </div>
 
           <div>
-            <p className={`section-tag mb-3 reveal ${aboutIn?"in":""}`}>Sobre nosotros</p>
-            <h2 className={`display text-4xl font-black text-slate-900 leading-tight mb-5 reveal d1 ${aboutIn?"in":""}`}>
+            <p className={`eyebrow mb-3 reveal ${aboutIn ? "in" : ""}`}><Wrench className="w-3.5 h-3.5" /> Sobre nosotros</p>
+            <h2 className={`font-display text-[2.6rem] leading-[1.08] font-black text-ink tracking-tight mb-5 reveal d1 ${aboutIn ? "in" : ""}`}>
               Plomería profesional<br />a tu alcance
             </h2>
-            <p className={`text-slate-500 leading-relaxed text-[15px] mb-6 reveal d2 ${aboutIn?"in":""}`}>
-              Somos un equipo de técnicos especializados con más de 15 años resolviendo problemas de plomería residencial y comercial. Materiales certificados, métodos modernos y resultados duraderos.
+            <p className={`text-slate-500 leading-relaxed text-[15px] mb-6 reveal d2 ${aboutIn ? "in" : ""}`}>
+              Somos un equipo de técnicos matriculados con más de 15 años resolviendo problemas de plomería residencial y comercial. Materiales certificados, métodos modernos y resultados que duran.
             </p>
-            <ul className={`space-y-3 mb-8 reveal d3 ${aboutIn?"in":""}`}>
-              {["Diagnóstico gratuito en el lugar","Materiales de primera calidad","Garantía escrita en cada trabajo","Atención de emergencias 24/7"].map(item=>(
+            <ul className={`space-y-3 mb-8 reveal d3 ${aboutIn ? "in" : ""}`}>
+              {["Diagnóstico y presupuesto sin cargo", "Materiales de primera calidad", "Garantía escrita en cada trabajo", "Atención de emergencias 24/7"].map(item => (
                 <li key={item} className="flex items-center gap-3 text-slate-600 text-[15px]">
-                  <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-3 h-3 text-blue-600" strokeWidth={3}/>
+                  <div className="w-5 h-5 rounded-full icon-tile flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3" strokeWidth={3} />
                   </div>
                   {item}
                 </li>
               ))}
             </ul>
-            <div className={`flex flex-wrap gap-3 reveal d4 ${aboutIn?"in":""}`}>
-              <button className="cta-btn text-white font-semibold px-7 py-3.5 rounded-xl text-sm flex items-center gap-2">
+            <div className={`flex flex-wrap gap-3 reveal d4 ${aboutIn ? "in" : ""}`}>
+              <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary font-semibold px-6 py-3.5 rounded-xl text-sm flex items-center gap-2">
                 <MessageCircle className="w-4 h-4" /> Pedir cotización
-              </button>
-              <button className="dark-btn text-slate-700 font-semibold px-7 py-3.5 rounded-xl text-sm flex items-center gap-2">
+              </a>
+              <a href={TEL} className="btn-line font-semibold px-6 py-3.5 rounded-xl text-sm flex items-center gap-2">
                 <Phone className="w-4 h-4" /> Llamar ahora
-              </button>
+              </a>
             </div>
           </div>
         </div>
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="py-24 bg-slate-50" ref={testiRef}>
+      <section id="opiniones" className="py-24 bg-slate-50" ref={testiRef}>
         <div className="max-w-6xl mx-auto px-6">
-          <div className={`text-center mb-12 reveal ${testiIn?"in":""}`}>
-            <p className="section-tag mb-3">Testimonios</p>
-            <h2 className="display text-4xl font-black text-slate-900">Lo que dicen nuestros clientes</h2>
+          <div className={`text-center max-w-xl mx-auto mb-12 reveal ${testiIn ? "in" : ""}`}>
+            <p className="eyebrow mb-3 justify-center"><Star className="w-3.5 h-3.5" /> Opiniones reales</p>
+            <h2 className="font-display text-[2.6rem] leading-[1.08] font-black text-ink tracking-tight">Lo que dicen nuestros clientes</h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-7">
+          <div className="grid md:grid-cols-3 gap-6">
             {TESTIMONIALS.map(({ name, role, text, rating }, i) => (
-              <div key={name} className={`card-lift bg-white rounded-2xl p-7 border border-slate-100 reveal d${i+1} ${testiIn?"in":""}`}>
+              <div key={name} className={`card bg-white rounded-2xl p-7 border border-slate-100 shadow-[0_1px_2px_rgba(15,23,42,.04)] reveal d${i + 1} ${testiIn ? "in" : ""}`}>
                 <div className="flex gap-0.5 mb-4">
-                  {Array.from({length:rating}).map((_,j)=><Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400"/>)}
+                  {Array.from({ length: rating }).map((_, j) => <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
                 </div>
                 <p className="text-slate-600 text-[15px] leading-relaxed mb-6">&ldquo;{text}&rdquo;</p>
                 <div className="flex items-center gap-3 pt-5 border-t border-slate-100">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-sky-400 flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ background: "linear-gradient(135deg,var(--aqua),var(--aqua-deep))" }}>
                     {name[0]}
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-800 text-sm">{name}</div>
+                    <div className="font-semibold text-ink text-sm">{name}</div>
                     <div className="text-slate-400 text-xs">{role}</div>
                   </div>
                 </div>
@@ -401,41 +493,108 @@ export default function App() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section className="py-24 bg-white" ref={faqRef}>
+        <div className="max-w-3xl mx-auto px-6">
+          <div className={`text-center mb-12 reveal ${faqIn ? "in" : ""}`}>
+            <p className="eyebrow mb-3 justify-center"><Droplets className="w-3.5 h-3.5" /> Preguntas frecuentes</p>
+            <h2 className="font-display text-[2.6rem] leading-[1.08] font-black text-ink tracking-tight">Antes de llamarnos</h2>
+          </div>
+          <div className={`space-y-3 reveal d1 ${faqIn ? "in" : ""}`}>
+            {FAQS.map(({ q, a }, i) => {
+              const open = faq === i;
+              return (
+                <div key={q} className={`rounded-2xl border transition-colors ${open ? "border-aqua-deep/30 bg-slate-50" : "border-slate-100 bg-white"}`} style={open ? { borderColor: "rgba(12,143,160,.3)" } : undefined}>
+                  <button onClick={() => setFaq(open ? null : i)} className="w-full flex items-center justify-between gap-4 text-left px-6 py-5">
+                    <span className="font-semibold text-ink text-[15.5px]">{q}</span>
+                    <ChevronDown className={`w-5 h-5 flex-shrink-0 text-aqua-deep transition-transform ${open ? "rotate-180" : ""}`} />
+                  </button>
+                  <div className="grid transition-[grid-template-rows] duration-300" style={{ gridTemplateRows: open ? "1fr" : "0fr" }}>
+                    <div className="overflow-hidden">
+                      <p className="px-6 pb-5 text-slate-500 text-[14.5px] leading-relaxed">{a}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* BOTTOM CTA */}
-      <section style={{ background:"linear-gradient(135deg,#0f2851 0%,#1a4fa0 50%,#1e7fd4 100%)" }} className="py-20">
-        <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="display text-4xl md:text-5xl font-black text-white leading-tight mb-4">
-            ¿Tenés un problema<br />de plomería?
+      <section className="ink-grad py-20 relative overflow-hidden">
+        <div className="hatch absolute inset-0" />
+        <div className="blob w-96 h-96" style={{ background: "rgba(26,192,207,.2)", top: "-3rem", right: "10%" }} />
+        <div className="max-w-2xl mx-auto px-6 text-center relative z-10">
+          <p className="eyebrow eyebrow-l mb-4 justify-center"><Clock className="w-3.5 h-3.5" /> Disponibles 24 hs</p>
+          <h2 className="font-display text-4xl md:text-5xl font-black text-white leading-[1.08] tracking-tight mb-4">
+            ¿Tenés una pérdida<br />o un caño tapado?
           </h2>
-          <p className="text-white/60 text-lg mb-8">Contactanos ahora y te damos solución hoy mismo.</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-blue-700 font-bold px-8 py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors shadow-xl">
+          <p className="text-white/65 text-lg mb-8">Escribinos y un plomero matriculado va para tu casa hoy mismo.</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-wa font-bold px-8 py-4 rounded-xl flex items-center justify-center gap-2">
+              <WhatsAppIcon className="w-5 h-5" /> Escribir por WhatsApp
+            </a>
+            <a href={TEL} className="btn-ghost font-semibold px-8 py-4 rounded-xl flex items-center justify-center gap-2">
               <Phone className="w-5 h-5" /> Llamar ahora
-            </button>
-            <button className="ghost-btn text-white font-semibold px-8 py-4 rounded-xl flex items-center justify-center gap-2">
-              <MessageCircle className="w-5 h-5" /> Cotización online
-            </button>
+            </a>
           </div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-slate-950 text-white py-10">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-5">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Droplets className="w-3.5 h-3.5 text-white" />
+      <footer className="bg-ink text-white pt-16 pb-28 md:pb-10">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-10 pb-12 border-b border-white/10">
+            <div className="md:col-span-1">
+              <div className="flex items-center gap-2.5 mb-4">
+                <Logo />
+                <span className="font-display font-bold text-lg">Aqua<span style={{ color: "var(--aqua)" }}>Fix</span></span>
+              </div>
+              <p className="text-white/50 text-sm leading-relaxed">Plomeros matriculados a domicilio. Urgencias, destapes, pérdidas y gas, las 24 horas.</p>
             </div>
-            <span className="font-bold text-base">AquaFix</span>
+            <div>
+              <h4 className="font-semibold text-sm mb-4 text-white/90">Servicios</h4>
+              <ul className="space-y-2.5 text-sm text-white/50">
+                {["Urgencias 24/7", "Destapes", "Calefones", "Detección de pérdidas", "Redes de gas"].map(s => (
+                  <li key={s}><a href="#servicios" className="hover:text-white transition-colors">{s}</a></li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-sm mb-4 text-white/90">Empresa</h4>
+              <ul className="space-y-2.5 text-sm text-white/50">
+                {NAV.map(l => (
+                  <li key={l}><a href={`#${l.toLowerCase()}`} className="hover:text-white transition-colors">{l}</a></li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-sm mb-4 text-white/90">Contacto</h4>
+              <ul className="space-y-2.5 text-sm text-white/50">
+                <li><a href={TEL} className="flex items-center gap-2 hover:text-white transition-colors"><Phone className="w-4 h-4 text-aqua" /> +54 9 11 0000-0000</a></li>
+                <li><a href={WA} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors"><WhatsAppIcon className="w-4 h-4 text-aqua" /> WhatsApp 24 hs</a></li>
+                <li className="flex items-center gap-2"><Mail className="w-4 h-4 text-aqua" /> hola@aquafix.com.ar</li>
+                <li className="flex items-center gap-2"><MapPin className="w-4 h-4 text-aqua" /> CABA y GBA</li>
+              </ul>
+            </div>
           </div>
-          <div className="flex gap-7">
-            {["Nosotros","Servicios","Proyectos","Contacto"].map(l=>(
-              <a key={l} href="#" className="text-white/40 hover:text-white text-sm transition-colors">{l}</a>
-            ))}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6">
+            <p className="text-white/40 text-sm">© 2026 AquaFix. Todos los derechos reservados.</p>
+            <p className="text-white/30 text-xs">Plomeros matriculados · Asegurados · Garantía escrita</p>
           </div>
-          <p className="text-white/25 text-sm">© 2026 AquaFix. Todos los derechos reservados.</p>
         </div>
       </footer>
+
+      {/* MOBILE STICKY CALL BAR */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 px-4 py-3 flex gap-3 shadow-[0_-4px_20px_rgba(15,23,42,.08)]">
+        <a href={TEL} className="btn-line flex-1 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 text-sm">
+          <Phone className="w-4 h-4" /> Llamar
+        </a>
+        <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-wa flex-1 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 text-sm">
+          <WhatsAppIcon className="w-4 h-4" /> WhatsApp
+        </a>
+      </div>
     </div>
   );
 }

@@ -1,12 +1,24 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 
-const inter = Inter({ subsets: ["latin"], variable: "--app-font-sans" });
+const sans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--app-font-sans",
+  display: "swap",
+});
+
+const display = Fraunces({
+  subsets: ["latin"],
+  variable: "--app-font-display",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "900"],
+  style: ["normal", "italic"],
+});
 
 export const metadata: Metadata = {
-  title: "AquaFix — Plomería 24hs en tu zona | Urgencias y destapes",
+  title: "AquaFix — Plomería matriculada 24hs | Urgencias, destapes y pérdidas",
   description:
-    "Plomero matriculado a domicilio. Destapes, pérdidas, calefones y urgencias 24/7. Presupuesto sin cargo. Llamá ahora.",
+    "Plomeros matriculados a domicilio en tu zona. Destapes, pérdidas, calefones y urgencias 24/7. Llegamos en menos de 60 minutos. Presupuesto sin cargo y garantía escrita.",
 };
 
 export default function PlomeriaLayout({
@@ -14,7 +26,7 @@ export default function PlomeriaLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div
-      className={`${inter.variable} min-h-screen bg-white font-sans text-slate-800`}
+      className={`${sans.variable} ${display.variable} min-h-screen bg-white font-sans text-slate-800 antialiased`}
     >
       {children}
     </div>
