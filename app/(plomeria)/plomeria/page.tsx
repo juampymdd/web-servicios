@@ -99,6 +99,7 @@ const FAQS = [
   { q: "¿Qué garantía dan?", a: "Entregamos garantía escrita en cada servicio. Si el problema reaparece dentro del plazo, volvemos sin cargo." },
 ];
 
+// TODO: reemplazar por teléfono/WhatsApp reales
 const WA = "https://wa.me/5491100000000";
 const TEL = "tel:+5491100000000";
 
@@ -117,8 +118,14 @@ function useInView<T extends Element>(threshold = 0.12) {
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
   const [faq, setFaq] = useState<number | null>(0);
   const [active, setActive] = useState("servicios");
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [heroRef, heroIn] = useInView<HTMLDivElement>(0.05);
   const [servRef, servIn] = useInView<HTMLElement>();
   const [procRef, procIn] = useInView<HTMLElement>();
@@ -126,11 +133,34 @@ export default function App() {
   const [testiRef, testiIn] = useInView<HTMLElement>();
   const [faqRef, faqIn] = useInView<HTMLElement>();
 
+  // scrolled state via a 1px sentinel observed at the top — no scroll listener
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", fn);
-    return () => window.removeEventListener("scroll", fn);
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setScrolled(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
+
+  // subscribe to reduced-motion changes (gates SMIL animateMotion).
+  // Initial value is read lazily in useState to avoid a sync setState here.
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const fn = () => setReduceMotion(mq.matches);
+    mq.addEventListener("change", fn);
+    return () => mq.removeEventListener("change", fn);
+  }, []);
+
+  // close mobile menu on Escape
+  useEffect(() => {
+    if (!menuOpen) return;
+    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
+    window.addEventListener("keydown", fn);
+    return () => window.removeEventListener("keydown", fn);
+  }, [menuOpen]);
 
   // scrollspy — mark the nav link of the section in view
   useEffect(() => {
@@ -151,6 +181,10 @@ export default function App() {
         :root {
           --ink:#0A1A2F; --ink-soft:#11304f;
           --aqua:#1AC0CF; --aqua-deep:#0C8FA0;
+          /* darker aqua for interactive text/links on white (clears AA 4.5:1) */
+          --aqua-link:#0A6F7D;
+          /* solid darker aqua for primary button fill (white text clears 4.5:1) */
+          --aqua-btn:#0A7D8C;
           --copper:#D08A4E; --copper-soft:#E7B486;
           /* surface elevation scale */
           --surface-0:#08172a; --surface-1:#0f2942; --surface-2:#ffffff;
@@ -170,29 +204,33 @@ export default function App() {
         @keyframes flow{to{stroke-dashoffset:-32}}
         .glow{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none}
 
-        .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}
+        .reveal{opacity:0;transform:translateY(26px);transition:opacity .42s cubic-bezier(.22,1,.36,1),transform .42s cubic-bezier(.22,1,.36,1)}
         .reveal.in{opacity:1;transform:none}
-        .d1{transition-delay:.08s}.d2{transition-delay:.18s}.d3{transition-delay:.3s}
-        .d4{transition-delay:.42s}.d5{transition-delay:.54s}.d6{transition-delay:.66s}
+        .d1{transition-delay:.05s}.d2{transition-delay:.1s}.d3{transition-delay:.15s}
+        .d4{transition-delay:.2s}.d5{transition-delay:.25s}.d6{transition-delay:.3s}
 
-        .eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--aqua-deep)}
+        .eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--aqua-link)}
         .eyebrow-l{color:var(--copper-soft)}
 
         .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.9);font-size:.74rem;font-weight:600;letter-spacing:.04em;padding:7px 15px;border-radius:100px;backdrop-filter:blur(6px)}
 
-        .btn-primary{background:linear-gradient(135deg,var(--aqua) 0%,var(--aqua-deep) 100%);color:#fff;box-shadow:0 8px 22px -6px rgba(12,143,160,.6);transition:transform .2s,box-shadow .2s,filter .2s}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px -6px rgba(12,143,160,.7);filter:saturate(1.1)}
-        .btn-ghost{border:1.5px solid rgba(255,255,255,.4);color:#fff;transition:background .2s,border-color .2s}
+        .btn-primary{background:var(--aqua-btn);color:#fff;box-shadow:0 8px 22px -6px rgba(12,143,160,.6);transition:transform .2s,box-shadow .2s,filter .2s}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px -6px rgba(12,143,160,.7);filter:brightness(1.08)}
+        .btn-primary:active{transform:scale(.98)}
+        .btn-ghost{border:1.5px solid rgba(255,255,255,.4);color:#fff;transition:background .2s,border-color .2s,transform .2s}
         .btn-ghost:hover{background:rgba(255,255,255,.12);border-color:#fff}
+        .btn-ghost:active{transform:scale(.98)}
         .btn-wa{background:#25D366;color:#fff;box-shadow:0 8px 22px -6px rgba(37,211,102,.6);transition:transform .2s,box-shadow .2s}
         .btn-wa:hover{transform:translateY(-2px);box-shadow:0 14px 30px -6px rgba(37,211,102,.7)}
-        .btn-line{border:1.5px solid #e2e8f0;color:#334155;transition:border-color .2s,color .2s,background .2s}
-        .btn-line:hover{border-color:var(--aqua-deep);color:var(--aqua-deep);background:#f0fbfc}
+        .btn-wa:active{transform:scale(.98)}
+        .btn-line{border:1.5px solid #e2e8f0;color:#334155;transition:border-color .2s,color .2s,background .2s,transform .2s}
+        .btn-line:hover{border-color:var(--aqua-link);color:var(--aqua-link);background:#f0fbfc}
+        .btn-line:active{transform:scale(.98)}
 
         .nav-link{position:relative}
-        .nav-link::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:2px;border-radius:2px;background:var(--aqua-deep);transition:width .25s ease}
+        .nav-link::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:2px;border-radius:2px;background:var(--aqua-link);transition:width .25s ease}
         .nav-link:hover::after{width:100%}
-        .nav-link.nav-active{color:var(--aqua-deep)}
+        .nav-link.nav-active{color:var(--aqua-link)}
         .nav-link.nav-active::after{width:100%}
 
         /* resting elevation so cards lift off the surface, not sit flat on it */
@@ -202,7 +240,7 @@ export default function App() {
         .icon-tile{background:linear-gradient(135deg,#e7fbfd,#d2f1f4);color:var(--aqua-deep)}
         .glass{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(16px)}
 
-        .wa-float{position:fixed;bottom:24px;right:24px;z-index:60;width:58px;height:58px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 26px rgba(37,211,102,.5);transition:transform .2s}
+        .wa-float{position:fixed;bottom:max(24px,env(safe-area-inset-bottom));right:24px;z-index:60;width:58px;height:58px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 26px rgba(37,211,102,.5);transition:transform .2s}
         .wa-float:hover{transform:scale(1.08)}
         .wa-float::before{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid rgba(37,211,102,.45);animation:ring 2.2s ease-out infinite}
         @keyframes ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.55);opacity:0}}
@@ -216,6 +254,14 @@ export default function App() {
 
         @media (prefers-reduced-motion:reduce){.reveal,.floaty,.floaty-slow,.marquee,.wa-float::before{animation:none!important;transition:none!important;opacity:1!important;transform:none!important}}
       `}</style>
+
+      {/* scroll sentinel — observed to toggle the scrolled navbar state */}
+      <div ref={sentinelRef} aria-hidden="true" className="absolute top-0 left-0 h-px w-px" />
+
+      {/* skip link */}
+      <a href="#servicios" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[70] focus:rounded-lg focus:bg-ink focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
+        Saltar al contenido
+      </a>
 
       {/* WHATSAPP FLOAT */}
       <a href={WA} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Escribinos por WhatsApp">
@@ -261,7 +307,7 @@ export default function App() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <a href={TEL} className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${scrolled ? "text-slate-700 hover:text-aqua-deep" : "text-white/85 hover:text-white"}`}>
+            <a href={TEL} className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${scrolled ? "text-slate-700 hover:text-[#0A6F7D]" : "text-white/85 hover:text-white"}`}>
               <Phone className="w-4 h-4" /> Llamar
             </a>
             <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary text-sm font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2">
@@ -269,13 +315,13 @@ export default function App() {
             </a>
           </div>
 
-          <button onClick={() => setMenuOpen(o => !o)} aria-label="Menú" className={`md:hidden p-1 ${scrolled ? "text-ink" : "text-white"}`}>
+          <button onClick={() => setMenuOpen(o => !o)} aria-label="Menú" aria-expanded={menuOpen} aria-controls="mobile-menu" className={`md:hidden p-1 ${scrolled ? "text-ink" : "text-white"}`}>
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
 
         {menuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-100 px-6 py-5 flex flex-col gap-4 shadow-xl">
+          <div id="mobile-menu" className="md:hidden bg-white border-t border-slate-100 px-6 py-5 flex flex-col gap-4 shadow-xl">
             {NAV.map(l => {
               const id = l.toLowerCase();
               const on = active === id;
@@ -285,7 +331,8 @@ export default function App() {
                   href={`#${id}`}
                   aria-current={on ? "true" : undefined}
                   onClick={() => setMenuOpen(false)}
-                  className={`font-medium ${on ? "text-aqua-deep" : "text-slate-700"}`}
+                  style={on ? { color: "var(--aqua-link)" } : undefined}
+                  className={`font-medium ${on ? "" : "text-slate-700"}`}
                 >
                   {l}
                 </a>
@@ -296,6 +343,7 @@ export default function App() {
         )}
       </header>
 
+      <main>
       {/* HERO */}
       <section id="top" className="relative ink-grad flex items-center overflow-hidden">
         <Blueprint className="blueprint" />
@@ -330,9 +378,9 @@ export default function App() {
             <div className={`grid grid-cols-3 gap-4 mt-10 pt-8 border-t border-white/12 reveal d4 ${heroIn ? "in" : ""}`}>
               {[["500+", "Trabajos por mes"], ["4.9", "Calificación"], ["15+", "Años de oficio"]].map(([v, l]) => (
                 <div key={l}>
-                  <div className="font-display text-2xl font-black text-white flex items-center gap-1">
+                  <div className="font-display text-2xl font-black text-white flex items-center gap-1 tabular-nums">
                     {v}
-                    {l === "Calificación" && <Star className="w-4 h-4 fill-amber-400 text-amber-400" />}
+                    {l === "Calificación" && <Star className="w-4 h-4 fill-amber-400 text-amber-400" aria-hidden="true" />}
                   </div>
                   <div className="text-white/70 text-xs mt-0.5">{l}</div>
                 </div>
@@ -351,13 +399,13 @@ export default function App() {
               />
               {/* raised shelf — card rests on it (surface-1 → surface-2) */}
               <div aria-hidden className="shelf absolute -z-10 -inset-x-5 top-9 -bottom-7 rounded-[2rem]" />
-              <div className="relative bg-white rounded-[1.6rem] ring-1 ring-black/5 overflow-hidden" style={{ boxShadow: "var(--elev-3)" }}>
+              <div className="relative bg-white rounded-2xl ring-1 ring-black/5 overflow-hidden" style={{ boxShadow: "var(--elev-3)" }}>
                 {/* header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                   <div className="flex items-center gap-2.5">
                     <Logo className="w-7 h-7" />
                     <div className="leading-none">
-                      <div className="text-[10px] uppercase tracking-[.14em] text-slate-400 mb-1">Solicitud</div>
+                      <div className="text-[10px] uppercase tracking-[.14em] text-slate-500 mb-1">Solicitud</div>
                       <div className="text-sm font-bold text-ink">#AF-2481</div>
                     </div>
                   </div>
@@ -370,7 +418,7 @@ export default function App() {
                 {/* live mini-map — shows the plumber on the way */}
                 <div className="px-5 pt-4">
                   <div className="relative h-28 overflow-hidden rounded-xl ring-1 ring-slate-100" style={{ background: "linear-gradient(135deg,#eaf4f7,#dfeaf3)" }}>
-                    <svg viewBox="0 0 320 120" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
+                    <svg viewBox="0 0 320 120" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" aria-hidden="true">
                       {/* streets */}
                       <g stroke="#c7d7e1" strokeWidth="7" strokeLinecap="round" opacity=".55">
                         <path d="M-10 44 H330" />
@@ -385,12 +433,14 @@ export default function App() {
                         <circle r="13" fill="var(--aqua-deep)" />
                         <path d="M-5 1 L0 -4 L5 1 M-3.5 0 V5 H3.5 V0" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
                       </g>
-                      {/* moving technician */}
+                      {/* moving technician — SMIL gated by reduced-motion (not covered by CSS media query) */}
                       <g>
-                        <circle r="8" fill="#0A1A2F" stroke="#fff" strokeWidth="2.5" />
-                        <animateMotion dur="4.2s" repeatCount="indefinite" calcMode="linear">
-                          <mpath href="#afRoute" />
-                        </animateMotion>
+                        <circle r="8" fill="#0A1A2F" stroke="#fff" strokeWidth="2.5" cx={reduceMotion ? 292 : undefined} cy={reduceMotion ? 26 : undefined} />
+                        {!reduceMotion && (
+                          <animateMotion dur="4.2s" repeatCount="indefinite" calcMode="linear">
+                            <mpath href="#afRoute" />
+                          </animateMotion>
+                        )}
                       </g>
                     </svg>
                     <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-ink ring-1 ring-black/5 backdrop-blur">
@@ -406,11 +456,11 @@ export default function App() {
                   <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0" style={{ background: "linear-gradient(135deg,var(--aqua),var(--aqua-deep))" }}>JL</div>
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold text-ink text-sm leading-tight">Jorge L.</div>
-                    <div className="flex items-center gap-1 text-[11px] text-slate-400"><BadgeCheck className="w-3 h-3 text-aqua-deep" /> Plomero matriculado</div>
+                    <div className="flex items-center gap-1 text-[11px] text-slate-500"><BadgeCheck className="w-3 h-3 text-aqua-deep" aria-hidden="true" /> Plomero matriculado</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-display font-black text-2xl text-ink leading-none">12<span className="text-sm font-bold text-slate-400 ml-0.5">min</span></div>
-                    <div className="flex items-center justify-end gap-0.5 text-[10px] text-slate-400 mt-1"><Navigation className="w-2.5 h-2.5" /> a 2,4 km</div>
+                    <div className="font-display font-black text-2xl text-ink leading-none tabular-nums">12<span className="text-sm font-bold text-slate-500 ml-0.5">min</span></div>
+                    <div className="flex items-center justify-end gap-0.5 text-[10px] text-slate-500 mt-1 tabular-nums"><Navigation className="w-2.5 h-2.5" aria-hidden="true" /> a 2,4 km</div>
                   </div>
                 </div>
 
@@ -429,8 +479,8 @@ export default function App() {
                           {st === true && <Check className="w-2 h-2 text-white" strokeWidth={4} />}
                         </span>
                         <div className="flex-1 flex items-center justify-between -mt-0.5">
-                          <span className={`text-[13px] ${st ? "font-semibold text-ink" : "text-slate-400"}`}>{t}</span>
-                          <span className="text-[11px] text-slate-400">{time}</span>
+                          <span className={`text-[13px] ${st ? "font-semibold text-ink" : "text-slate-500"}`}>{t}</span>
+                          <span className="text-[11px] text-slate-500 tabular-nums">{time}</span>
                         </div>
                       </li>
                     ))}
@@ -440,10 +490,10 @@ export default function App() {
                 {/* footer rating */}
                 <div className="flex items-center justify-between px-5 py-3.5 bg-slate-50 border-t border-slate-100">
                   <div className="flex items-center gap-1.5">
-                    <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />)}</div>
-                    <span className="text-xs font-bold text-ink">4,9</span>
+                    <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />)}</div>
+                    <span className="text-xs font-bold text-ink tabular-nums">4,9</span>
                   </div>
-                  <span className="text-[11px] text-slate-400">+2.000 trabajos resueltos</span>
+                  <span className="text-[11px] text-slate-500 tabular-nums">+2.000 trabajos resueltos</span>
                 </div>
               </div>
             </div>
@@ -456,6 +506,7 @@ export default function App() {
             viewBox="0 0 1440 140"
             preserveAspectRatio="none"
             xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
             className="block w-full h-[72px] md:h-[120px]"
           >
             <defs>
@@ -475,7 +526,7 @@ export default function App() {
 
       {/* TRUST MARQUEE */}
       <div className="bg-white border-b border-slate-100 py-5 overflow-hidden">
-        <div className="marquee text-slate-400">
+        <div className="marquee text-slate-500">
           {[...Array(2)].map((_, k) => (
             <div key={k} className="flex gap-14 items-center text-sm font-semibold tracking-wide shrink-0">
               {[
@@ -510,8 +561,8 @@ export default function App() {
                 </div>
                 <h3 className="font-display font-bold text-ink text-xl mb-2">{title}</h3>
                 <p className="text-slate-500 text-[14.5px] leading-relaxed mb-4">{desc}</p>
-                <a href={WA} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-aqua-deep opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
-                  Pedir este servicio <ChevronRight className="w-4 h-4" />
+                <a href={WA} target="_blank" rel="noopener noreferrer" style={{ color: "var(--aqua-link)" }} className="inline-flex items-center gap-1 text-sm font-semibold opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 group-focus-within:opacity-100 group-focus-within:translate-x-0 focus-visible:opacity-100 focus-visible:translate-x-0 transition-all">
+                  Pedir este servicio <ChevronRight className="w-4 h-4" aria-hidden="true" />
                 </a>
               </div>
             ))}
@@ -525,11 +576,11 @@ export default function App() {
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-5 relative z-10">
           {STATS.map(({ value, label, star }) => (
             <div key={label} className="glass rounded-2xl text-center py-7 px-4">
-              <div className="font-display text-[2.4rem] font-black text-white leading-none flex items-center justify-center gap-1.5">
+              <div className="font-display text-[2.4rem] font-black text-white leading-none flex items-center justify-center gap-1.5 tabular-nums">
                 {value}
-                {star && <Star className="w-5 h-5 fill-amber-400 text-amber-400" />}
+                {star && <Star className="w-5 h-5 fill-amber-400 text-amber-400" aria-hidden="true" />}
               </div>
-              <div className="text-white/55 text-sm mt-2">{label}</div>
+              <div className="text-white/70 text-sm mt-2">{label}</div>
             </div>
           ))}
         </div>
@@ -545,7 +596,7 @@ export default function App() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {PROCESS.map(({ n, title, desc }, i) => (
               <div key={n} className={`relative reveal d${i + 1} ${procIn ? "in" : ""}`}>
-                <div className="font-display text-5xl font-black mb-4" style={{ color: "var(--copper)" }}>{n}</div>
+                <div className="font-display text-5xl font-black mb-4 tabular-nums" style={{ color: "var(--copper)" }}>{n}</div>
                 <h3 className="font-display font-bold text-ink text-lg mb-2">{title}</h3>
                 <p className="text-slate-500 text-[14.5px] leading-relaxed">{desc}</p>
                 {i < PROCESS.length - 1 && (
@@ -565,7 +616,7 @@ export default function App() {
             <div aria-hidden className="absolute -inset-6 -z-10 rounded-[2.6rem]" style={{ background: "radial-gradient(60% 60% at 38% 28%, rgba(26,192,207,.18), transparent 70%)", filter: "blur(28px)" }} />
 
             {/* credential panel */}
-            <div className="relative rounded-3xl bg-white ring-1 ring-slate-100 overflow-hidden" style={{ boxShadow: "var(--elev-3)" }}>
+            <div className="relative rounded-2xl bg-white ring-1 ring-slate-100 overflow-hidden" style={{ boxShadow: "var(--elev-3)" }}>
               {/* dark header — the credential */}
               <div className="relative overflow-hidden px-6 pt-6 pb-5" style={{ background: "linear-gradient(135deg,#0e2740,#0b2036)" }}>
                 <div aria-hidden className="absolute -right-10 -top-12 h-40 w-40 rounded-full" style={{ background: "radial-gradient(circle, rgba(26,192,207,.28), transparent 70%)" }} />
@@ -576,7 +627,7 @@ export default function App() {
                   <div className="min-w-0">
                     <div className="text-[10px] uppercase tracking-[.16em] text-white/45">Credencial</div>
                     <div className="font-display text-lg font-bold leading-tight text-white">Plomero matriculado</div>
-                    <div className="mt-0.5 flex items-center gap-1 text-[11px] text-aqua"><BadgeCheck className="h-3 w-3" /> Matrícula N° 12.345 · verificada</div>
+                    <div className="mt-0.5 flex items-center gap-1 text-[11px] text-aqua tabular-nums"><BadgeCheck className="h-3 w-3" aria-hidden="true" /> Matrícula N° 12.345 · verificada</div>
                   </div>
                 </div>
               </div>
@@ -593,7 +644,7 @@ export default function App() {
                     <div className="icon-tile flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"><Icon className="h-4 w-4" /></div>
                     <div className="min-w-0">
                       <div className="text-[13px] font-semibold text-ink">{t}</div>
-                      <div className="text-[11px] text-slate-400">{s}</div>
+                      <div className="text-[11px] text-slate-500">{s}</div>
                     </div>
                   </div>
                 ))}
@@ -601,8 +652,8 @@ export default function App() {
 
               {/* footer — seguro */}
               <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-6 py-3.5">
-                <span className="flex items-center gap-1.5 text-xs font-semibold text-ink"><ShieldCheck className="h-3.5 w-3.5 text-aqua-deep" /> Personal con seguro (ART)</span>
-                <span className="text-[11px] text-slate-400">+2.000 trabajos</span>
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-ink"><ShieldCheck className="h-3.5 w-3.5 text-aqua-deep" aria-hidden="true" /> Personal con seguro (ART)</span>
+                <span className="text-[11px] text-slate-500 tabular-nums">+2.000 trabajos</span>
               </div>
             </div>
 
@@ -653,8 +704,13 @@ export default function App() {
           <div className="grid md:grid-cols-3 gap-6">
             {TESTIMONIALS.map(({ name, role, text, rating }, i) => (
               <div key={name} className={`card bg-white rounded-2xl p-7 border border-slate-100/80 ring-1 ring-slate-900/[.03] reveal d${i + 1} ${testiIn ? "in" : ""}`}>
-                <div className="flex gap-0.5 mb-4">
-                  {Array.from({ length: rating }).map((_, j) => <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex gap-0.5" role="img" aria-label={`${rating} de 5 estrellas`}>
+                    {Array.from({ length: rating }).map((_, j) => <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" aria-hidden="true" />)}
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-slate-500">
+                    <BadgeCheck className="w-3.5 h-3.5 text-aqua-deep" aria-hidden="true" /> Opinión verificada · Google
+                  </span>
                 </div>
                 <p className="text-slate-600 text-[15px] leading-relaxed mb-6">&ldquo;{text}&rdquo;</p>
                 <div className="flex items-center gap-3 pt-5 border-t border-slate-100">
@@ -663,7 +719,7 @@ export default function App() {
                   </div>
                   <div>
                     <div className="font-semibold text-ink text-sm">{name}</div>
-                    <div className="text-slate-400 text-xs">{role}</div>
+                    <div className="text-slate-500 text-xs">{role}</div>
                   </div>
                 </div>
               </div>
@@ -684,11 +740,11 @@ export default function App() {
               const open = faq === i;
               return (
                 <div key={q} className={`rounded-2xl border transition-colors ${open ? "border-aqua-deep/30 bg-slate-50" : "border-slate-100 bg-white"}`} style={open ? { borderColor: "rgba(12,143,160,.3)" } : undefined}>
-                  <button onClick={() => setFaq(open ? null : i)} className="w-full flex items-center justify-between gap-4 text-left px-6 py-5">
+                  <button onClick={() => setFaq(open ? null : i)} aria-expanded={open} aria-controls={`faq-panel-${i}`} id={`faq-btn-${i}`} className="w-full flex items-center justify-between gap-4 text-left px-6 py-5">
                     <span className="font-semibold text-ink text-[15.5px]">{q}</span>
-                    <ChevronDown className={`w-5 h-5 flex-shrink-0 text-aqua-deep transition-transform ${open ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`w-5 h-5 flex-shrink-0 text-aqua-deep transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
                   </button>
-                  <div className="grid transition-[grid-template-rows] duration-300" style={{ gridTemplateRows: open ? "1fr" : "0fr" }}>
+                  <div id={`faq-panel-${i}`} role="region" aria-labelledby={`faq-btn-${i}`} className="grid transition-[grid-template-rows] duration-300" style={{ gridTemplateRows: open ? "1fr" : "0fr" }}>
                     <div className="overflow-hidden">
                       <p className="px-6 pb-5 text-slate-500 text-[14.5px] leading-relaxed">{a}</p>
                     </div>
@@ -720,6 +776,7 @@ export default function App() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* FOOTER */}
       <footer className="bg-ink text-white pt-16 pb-28 md:pb-10">
@@ -766,7 +823,7 @@ export default function App() {
       </footer>
 
       {/* MOBILE STICKY CALL BAR */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 px-4 py-3 flex gap-3 shadow-[0_-4px_20px_rgba(15,23,42,.08)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 px-4 py-3 flex gap-3 shadow-[0_-4px_20px_rgba(15,23,42,.08)]" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         <a href={TEL} className="btn-line flex-1 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 text-sm">
           <Phone className="w-4 h-4" /> Llamar
         </a>

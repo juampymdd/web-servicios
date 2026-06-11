@@ -2,10 +2,14 @@
 
 import { useState, useEffect, useRef, type RefObject } from "react";
 import {
-  Menu, X, Phone, MessageCircle, ChevronRight, ArrowRight, ArrowUpRight,
+  Menu, X, Phone, MessageCircle, ChevronRight, ChevronDown, ArrowRight, ArrowUpRight,
   Check, Shield, Award, HardHat, Wrench,
   Image as ImageIcon, HelpCircle, Mail, Star, Thermometer, Factory, Home,
 } from "lucide-react";
+
+// TODO: reemplazar por datos reales
+const TEL = "tel:+5491100000000";
+const WA = "https://wa.me/5491100000000?text=Hola%2C%20quiero%20un%20presupuesto%20para%20mi%20techo";
 
 /* ── Brand mark — metal roof ridge ──────────────────────────── */
 function Logo({ className = "w-8 h-8" }: { className?: string }) {
@@ -118,7 +122,14 @@ function RoofGlyph({ className = "" }: { className?: string }) {
 }
 
 /* ── Content ────────────────────────────────────────────────── */
-const NAV = ["Inicio", "Servicios", "Galería", "Nosotros", "Contacto"];
+const NAV: { label: string; id: string }[] = [
+  { label: "Inicio", id: "inicio" },
+  { label: "Servicios", id: "servicios" },
+  { label: "Galería", id: "galeria" },
+  { label: "Nosotros", id: "nosotros" },
+  { label: "FAQ", id: "faq" },
+  { label: "Contacto", id: "contacto" },
+];
 
 const SERVICES = [
   { Icon: Home, title: "Instalación de Techos", desc: "Montaje profesional de techos metálicos con materiales de primera calidad y acabado perfecto." },
@@ -147,19 +158,48 @@ const TESTIMONIALS = [
   { name: "Diego Torres", role: "Constructor", text: "Los uso para todos mis proyectos. Puntualidad, calidad y precios justos. No busco a nadie más.", rating: 5 },
 ];
 
+const FAQS = [
+  { q: "¿Qué garantía ofrecen sobre el techo?", a: "Entregamos garantía escrita de hasta 15 años sobre el material y la instalación. Si aparece una filtración cubierta dentro del plazo, volvemos sin cargo." },
+  { q: "¿Cuánto tarda la instalación de un techo?", a: "Un techo residencial estándar se instala en 2 a 4 días según la superficie y la complejidad. Te damos un cronograma claro antes de empezar." },
+  { q: "¿Con qué materiales trabajan?", a: "Usamos chapa acanalada y standing-seam de primera línea, aislación térmica y membranas certificadas por el fabricante. Nada de materiales genéricos." },
+  { q: "¿El presupuesto tiene costo?", a: "No. La visita técnica y el presupuesto son sin cargo y sin compromiso. Solo cobrás si aprobás el trabajo." },
+];
+
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [faq, setFaq] = useState<number | null>(0);
+  const [active, setActive] = useState("inicio");
   const [heroRef, heroIn] = useInView<HTMLDivElement>(0.05);
   const [servRef, servIn] = useInView<HTMLElement>();
   const [aboutRef, aboutIn] = useInView<HTMLElement>();
   const [galRef, galIn] = useInView<HTMLElement>();
   const [testiRef, testiIn] = useInView<HTMLElement>();
+  const [faqRef, faqIn] = useInView<HTMLElement>();
+  const [contactRef, contactIn] = useInView<HTMLElement>();
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", fn);
+    window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
+  }, []);
+
+  // close mobile menu on Escape
+  useEffect(() => {
+    if (!menuOpen) return;
+    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
+    window.addEventListener("keydown", fn);
+    return () => window.removeEventListener("keydown", fn);
+  }, [menuOpen]);
+
+  // scrollspy — highlight the nav link of the section in view
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) setActive(e.target.id); }),
+      { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
+    );
+    NAV.forEach(({ id }) => { const el = document.getElementById(id); if (el) obs.observe(el); });
+    return () => obs.disconnect();
   }, []);
 
   return (
@@ -167,88 +207,117 @@ export default function App() {
       <style>{`
         .display{font-family:var(--app-font-display),"Arial Narrow",sans-serif;letter-spacing:-.01em}
         /* keyboard focus — dual ring (dark inner + red outer) clears AA 3:1 on light AND dark surfaces */
-        a:focus-visible,button:focus-visible,summary:focus-visible{outline:none;box-shadow:0 0 0 2px #0b0e13,0 0 0 4px #dc2626;border-radius:10px}
+        a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:none;box-shadow:0 0 0 2px #0b0e13,0 0 0 4px #dc2626;border-radius:10px}
+        .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+        .skip-link{position:fixed;top:0;left:50%;transform:translate(-50%,-120%);z-index:200;background:#b91c1c;color:#fff;padding:10px 18px;border-radius:0 0 10px 10px;font-size:.85rem;font-weight:600;transition:transform .2s}
+        .skip-link:focus{transform:translate(-50%,0)}
         /* elevated shelf: quick-access bar lifts off the dark hero */
         .shelf{box-shadow:0 -1px 0 rgba(255,255,255,.06),0 30px 60px -28px rgba(0,0,0,.75);border-radius:0 0 14px 14px;overflow:hidden}
-        .reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+        .reveal{opacity:0;transform:translateY(24px);transition:opacity .45s ease,transform .45s ease}
         .reveal.in{opacity:1;transform:none}
-        .reveal.d1{transition-delay:.1s}.reveal.d2{transition-delay:.22s}
-        .reveal.d3{transition-delay:.34s}.reveal.d4{transition-delay:.46s}.reveal.d5{transition-delay:.58s}
+        .reveal.d1{transition-delay:.06s}.reveal.d2{transition-delay:.12s}
+        .reveal.d3{transition-delay:.18s}.reveal.d4{transition-delay:.24s}.reveal.d5{transition-delay:.3s}
         .nav-link{position:relative}
         .nav-link::after{content:"";position:absolute;bottom:-3px;left:0;width:0;height:2px;background:#dc2626;transition:width .22s ease}
         .nav-link:hover::after{width:100%}
+        .nav-link.nav-active::after{width:100%}
         .card-lift{transition:transform .25s ease,box-shadow .25s ease}
         .card-lift:hover{transform:translateY(-4px);box-shadow:0 16px 36px rgba(0,0,0,.1)}
         .wa-float{position:fixed;bottom:28px;right:28px;z-index:100;width:56px;height:56px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,.5);transition:transform .2s ease,box-shadow .2s ease;text-decoration:none}
         .wa-float:hover{transform:scale(1.1);box-shadow:0 8px 28px rgba(37,211,102,.65)}
         .wa-float::before{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid rgba(37,211,102,.4);animation:ring 2.2s ease-out infinite}
         @keyframes ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.5);opacity:0}}
-        .red-btn{background:#dc2626;box-shadow:0 4px 16px rgba(220,38,38,.35);transition:background .2s,transform .2s,box-shadow .2s}
-        .red-btn:hover{background:#b91c1c;transform:translateY(-2px);box-shadow:0 8px 24px rgba(220,38,38,.45)}
+        .red-btn{background:#b91c1c;box-shadow:0 4px 16px rgba(185,28,28,.35);transition:background .2s,transform .2s,box-shadow .2s}
+        .red-btn:hover{background:#991b1b;transform:translateY(-2px);box-shadow:0 8px 24px rgba(185,28,28,.45)}
+        .red-btn:active{transform:translateY(0);box-shadow:0 2px 10px rgba(185,28,28,.4)}
         .ghost-white{border:1.5px solid rgba(255,255,255,.4);transition:background .2s,border-color .2s}
         .ghost-white:hover{background:rgba(255,255,255,.1);border-color:white}
-        .outline-dark{border:1.5px solid #e2e8f0;transition:border-color .2s,color .2s}
+        .ghost-white:active{background:rgba(255,255,255,.18)}
+        .outline-dark{border:1.5px solid #e2e8f0;transition:border-color .2s,color .2s,background .2s}
         .outline-dark:hover{border-color:#dc2626;color:#dc2626}
+        .outline-dark:active{background:rgba(220,38,38,.06)}
         .hero-overlay{background:linear-gradient(105deg,rgba(8,9,12,.92) 0%,rgba(8,9,12,.6) 52%,rgba(8,9,12,.2) 100%)}
         .corrugated{background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 1px,transparent 1px,transparent 48px);background-size:48px 100%}
         .section-tag{color:#dc2626;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
         .section-tag::before{content:"";display:inline-block;width:28px;height:2.5px;background:#dc2626;border-radius:2px}
         .quick-card{background:rgba(255,255,255,.97);padding:28px 28px 24px;border-top:3px solid transparent;transition:border-color .2s,background .2s}
         .quick-card:hover{border-top-color:#dc2626}
-        .quick-card.accent{background:#dc2626;color:white}
-        .stat-num{font-family:var(--app-font-display),sans-serif;font-weight:900;font-size:3rem;line-height:1;color:white}
-        .tag-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);color:#fca5a5;font-size:.7rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:5px 12px;border-radius:100px}
+        .quick-card.accent{background:#b91c1c;color:white}
+        .stat-num{font-family:var(--app-font-display),sans-serif;font-weight:900;font-size:3rem;line-height:1;color:white;font-variant-numeric:tabular-nums}
+        .tag-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(220,38,38,.9);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:.7rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:5px 12px;border-radius:100px}
         .gal{position:relative;overflow:hidden;border-radius:12px;cursor:pointer}
         .gal .fill{transition:transform .4s cubic-bezier(.22,1,.36,1)}
         .gal:hover .fill{transform:scale(1.05)}
+        .field{width:100%;background:#0f141b;border:1.5px solid #283241;color:#fff;border-radius:10px;padding:11px 14px;font-size:.9rem;transition:border-color .2s}
+        .field::placeholder{color:#64748b}
+        .field:hover{border-color:#3a4658}
+        .faq-item{border:1px solid #e2e8f0;border-radius:14px;background:#fff;transition:border-color .2s,background .2s}
+        .faq-item.open{border-color:rgba(185,28,28,.35);background:#fafafa}
         @media (prefers-reduced-motion:reduce){.reveal,.wa-float::before,.gal .fill{animation:none!important;transition:none!important;opacity:1!important;transform:none!important}}
       `}</style>
 
+      {/* SKIP LINK */}
+      <a href="#servicios" className="skip-link">Saltar al contenido</a>
+
       {/* WA BUTTON */}
-      <a href="https://wa.me/5491100000000" target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="WhatsApp">
+      <a href={WA} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Escribinos por WhatsApp">
         <WhatsAppIcon className="w-6 h-6 text-white" />
       </a>
 
       {/* NAVBAR */}
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/97 backdrop-blur shadow-sm border-b border-slate-100" : "bg-transparent"}`}>
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <a href="#" className="flex items-center gap-2.5">
+          <a href="#inicio" className="flex items-center gap-2.5">
             <Logo className="w-8 h-8" />
             <span className={`display font-extrabold text-2xl tracking-tight ${scrolled ? "text-slate-900" : "text-white"}`}>ReusRoof</span>
           </a>
 
           <nav className="hidden md:flex items-center gap-8">
-            {NAV.map(l => (
-              <a key={l} href="#" className={`nav-link text-sm font-medium transition-colors ${scrolled ? "text-slate-600 hover:text-slate-900" : "text-white/80 hover:text-white"}`}>{l}</a>
+            {NAV.map(({ label, id }) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                aria-current={active === id ? "true" : undefined}
+                className={`nav-link text-sm font-medium transition-colors ${active === id ? "nav-active" : ""} ${scrolled ? "text-slate-600 hover:text-slate-900" : "text-white/80 hover:text-white"}`}
+              >
+                {label}
+              </a>
             ))}
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <a href="tel:+5491100000000" className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${scrolled ? "text-slate-600 hover:text-red-600" : "text-white/75 hover:text-white"}`}>
+            <a href={TEL} className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${scrolled ? "text-slate-600 hover:text-red-600" : "text-white/75 hover:text-white"}`}>
               <Phone className="w-3.5 h-3.5" /> Llamar
             </a>
-            <button className="red-btn text-white text-sm font-semibold px-5 py-2.5 rounded-lg flex items-center gap-1.5">
+            <a href={WA} target="_blank" rel="noopener noreferrer" className="red-btn text-white text-sm font-semibold px-5 py-2.5 rounded-lg flex items-center gap-1.5">
               <Mail className="w-3.5 h-3.5" /> Consultar ahora
-            </button>
+            </a>
           </div>
 
-          <button onClick={() => setMenuOpen(o => !o)} className={`md:hidden p-1 ${scrolled ? "text-slate-800" : "text-white"}`}>
+          <button
+            onClick={() => setMenuOpen(o => !o)}
+            aria-label="Abrir menú"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            className={`md:hidden p-1 ${scrolled ? "text-slate-800" : "text-white"}`}
+          >
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
 
         {menuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-100 px-6 py-5 flex flex-col gap-4 shadow-lg">
-            {NAV.map(l => (
-              <a key={l} href="#" className="text-slate-700 font-medium text-sm">{l}</a>
+          <div id="mobile-menu" className="md:hidden bg-white border-t border-slate-100 px-6 py-5 flex flex-col gap-4 shadow-lg">
+            {NAV.map(({ label, id }) => (
+              <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)} className="text-slate-700 font-medium text-sm">{label}</a>
             ))}
-            <button className="red-btn text-white text-sm font-semibold px-5 py-3 rounded-lg text-center mt-1">Consultar ahora</button>
+            <a href={WA} target="_blank" rel="noopener noreferrer" className="red-btn text-white text-sm font-semibold px-5 py-3 rounded-lg text-center mt-1">Consultar ahora</a>
           </div>
         )}
       </header>
 
+      <main>
       {/* HERO — full-bleed, content bottom-left + quick-access bar */}
-      <section className="relative min-h-screen flex items-end overflow-hidden bg-[#08090c]">
+      <section id="inicio" className="relative min-h-dvh flex items-end overflow-hidden bg-[#08090c]">
         <div className="corrugated absolute inset-0" />
         <Truss className="absolute inset-0 w-full h-full opacity-50" />
         <RoofArt className="hidden lg:block absolute right-[-2%] top-[16%] w-[58%] max-w-3xl pointer-events-none [mask-image:linear-gradient(90deg,transparent,#000_28%)]" />
@@ -268,53 +337,53 @@ export default function App() {
               Instalamos, reparamos e impermeabilizamos todo tipo de techos con los mejores materiales del mercado y garantía extendida.
             </p>
             <div className={`flex flex-wrap gap-3 reveal d3 ${heroIn ? "in" : ""}`}>
-              <button className="red-btn text-white font-semibold px-7 py-3.5 rounded-lg text-sm flex items-center gap-2">
+              <a href={WA} target="_blank" rel="noopener noreferrer" className="red-btn text-white font-semibold px-7 py-3.5 rounded-lg text-sm flex items-center gap-2">
                 Solicitar presupuesto <ChevronRight className="w-4 h-4" />
-              </button>
-              <button className="ghost-white text-white font-semibold px-7 py-3.5 rounded-lg text-sm flex items-center gap-2">
+              </a>
+              <a href="#galeria" className="ghost-white text-white font-semibold px-7 py-3.5 rounded-lg text-sm flex items-center gap-2">
                 <ImageIcon className="w-4 h-4" /> Ver trabajos
-              </button>
+              </a>
             </div>
           </div>
 
           {/* Quick access bar — elevated shelf */}
           <div className={`shelf grid grid-cols-1 md:grid-cols-3 reveal d4 ${heroIn ? "in" : ""}`}>
-            <div className="quick-card">
+            <a href="#galeria" className="quick-card block">
               <div className="flex items-start gap-3">
-                <ImageIcon className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                <ImageIcon className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="display font-bold text-slate-900 text-xl">Galería</p>
                   <p className="text-slate-500 text-sm mt-1 leading-snug">Mirá nuestros trabajos terminados en todo tipo de propiedades.</p>
                 </div>
               </div>
-            </div>
-            <div className="quick-card border-l border-r border-slate-100">
+            </a>
+            <a href="#faq" className="quick-card block border-l border-r border-slate-100">
               <div className="flex items-start gap-3">
-                <HelpCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                <HelpCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="display font-bold text-slate-900 text-xl">Preguntas frecuentes</p>
                   <p className="text-slate-500 text-sm mt-1 leading-snug">Todo lo que necesitás saber antes de contratar nuestro servicio.</p>
                 </div>
               </div>
-            </div>
-            <div className="quick-card accent">
+            </a>
+            <a href="#contacto" className="quick-card accent block">
               <div className="flex items-start gap-3">
-                <Mail className="w-5 h-5 text-red-200 mt-0.5 flex-shrink-0" />
+                <Mail className="w-5 h-5 text-white/90 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="display font-bold text-white text-xl">Sección de contacto</p>
-                  <p className="text-red-100 text-sm mt-1 leading-snug">Completá el formulario y te respondemos en menos de 2 horas.</p>
-                  <button className="mt-3 flex items-center gap-1.5 text-white font-semibold text-sm hover:gap-2.5 transition-all">
+                  <p className="text-white/85 text-sm mt-1 leading-snug">Completá el formulario y te respondemos en menos de 2 horas.</p>
+                  <span className="mt-3 flex items-center gap-1.5 text-white font-semibold text-sm">
                     Contactar ahora <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </span>
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
       </section>
 
       {/* ABOUT */}
-      <section className="py-24 bg-white" ref={aboutRef}>
+      <section id="nosotros" className="py-24 bg-white" ref={aboutRef}>
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
           <div className={`relative reveal ${aboutIn ? "in" : ""}`}>
             <div className="relative rounded-2xl h-[26rem] overflow-hidden ring-1 ring-black/5" style={{ background: "radial-gradient(120% 90% at 70% 0%,#1b232e 0%,#0e1116 60%)", boxShadow: "var(--shadow-e3)" }}>
@@ -364,19 +433,19 @@ export default function App() {
               ))}
             </ul>
             <div className={`flex flex-wrap gap-3 reveal d4 ${aboutIn ? "in" : ""}`}>
-              <button className="red-btn text-white font-semibold px-7 py-3.5 rounded-lg text-sm flex items-center gap-2">
+              <a href={WA} target="_blank" rel="noopener noreferrer" className="red-btn text-white font-semibold px-7 py-3.5 rounded-lg text-sm flex items-center gap-2">
                 Consultar ahora <ArrowRight className="w-4 h-4" />
-              </button>
-              <button className="outline-dark text-slate-700 font-semibold px-7 py-3.5 rounded-lg text-sm flex items-center gap-2">
+              </a>
+              <a href={TEL} className="outline-dark text-slate-700 font-semibold px-7 py-3.5 rounded-lg text-sm flex items-center gap-2">
                 <Phone className="w-4 h-4" /> Llamar
-              </button>
+              </a>
             </div>
           </div>
         </div>
       </section>
 
       {/* SERVICES */}
-      <section className="py-20 bg-slate-950 relative overflow-hidden" ref={servRef}>
+      <section id="servicios" className="py-20 bg-slate-950 relative overflow-hidden" ref={servRef}>
         <div className="corrugated absolute inset-0 opacity-40" />
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className={`text-center mb-12 reveal ${servIn ? "in" : ""}`}>
@@ -384,7 +453,7 @@ export default function App() {
             <h2 className="display font-black text-white text-4xl md:text-5xl uppercase">¿En qué te podemos ayudar?</h2>
             <div className="w-12 h-1 bg-red-600 rounded mx-auto mt-4" />
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {SERVICES.map(({ Icon, title, desc }, i) => (
               <div key={title} className={`card-lift bg-slate-900 border border-slate-800 rounded-xl p-6 reveal d${i + 1} ${servIn ? "in" : ""}`}>
                 <div className="w-11 h-11 rounded-lg bg-red-600/15 border border-red-600/25 flex items-center justify-center text-red-500 mb-4">
@@ -399,26 +468,26 @@ export default function App() {
       </section>
 
       {/* STATS */}
-      <section className="py-14 bg-red-600">
+      <section className="py-14 bg-[#b91c1c]">
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {STATS.map(({ value, label }) => (
             <div key={label}>
               <div className="stat-num">{value}</div>
-              <div className="text-red-200 text-sm mt-1">{label}</div>
+              <div className="text-white text-sm mt-1">{label}</div>
             </div>
           ))}
         </div>
       </section>
 
       {/* GALLERY */}
-      <section className="py-24 bg-slate-950 relative overflow-hidden" ref={galRef}>
+      <section id="galeria" className="py-24 bg-slate-950 relative overflow-hidden" ref={galRef}>
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className={`text-center mb-12 reveal ${galIn ? "in" : ""}`}>
             <p className="section-tag justify-center mb-3 text-red-400">Portfolio</p>
             <h2 className="display font-black text-white text-4xl md:text-5xl uppercase">Nuestros trabajos</h2>
             <div className="w-12 h-1 bg-red-600 rounded mx-auto mt-4" />
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {GALLERY.map(({ label, sub, hue }, i) => (
               <div key={label} className={`gal group h-64 ring-1 ring-white/5 reveal d${i + 1} ${galIn ? "in" : ""}`}>
                 <div className="fill absolute inset-0" style={{ background: `linear-gradient(160deg, hsl(${hue},24%,${22 + i * 2}%), hsl(${hue},20%,10%))` }} />
@@ -436,9 +505,9 @@ export default function App() {
             ))}
           </div>
           <div className={`text-center mt-8 reveal d5 ${galIn ? "in" : ""}`}>
-            <button className="outline-dark text-white border-slate-700 font-semibold px-8 py-3.5 rounded-lg text-sm flex items-center gap-2 mx-auto hover:border-red-500 hover:text-red-400 transition-colors">
+            <a href="#galeria" className="outline-dark text-white border-slate-700 font-semibold px-8 py-3.5 rounded-lg text-sm inline-flex items-center gap-2 mx-auto hover:border-red-500 hover:text-red-400 transition-colors">
               <ImageIcon className="w-4 h-4" /> Ver galería completa
-            </button>
+            </a>
           </div>
         </div>
       </section>
@@ -450,11 +519,14 @@ export default function App() {
             <p className="section-tag justify-center mb-3">Testimonios</p>
             <h2 className="display font-black text-slate-900 text-4xl md:text-5xl uppercase">Lo que dicen nuestros clientes</h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-7">
+          <div className="grid md:grid-cols-3 gap-6">
             {TESTIMONIALS.map(({ name, role, text, rating }, i) => (
               <div key={name} className={`card-lift bg-white border border-slate-100 ring-1 ring-slate-900/[.03] shadow-e2 rounded-xl p-7 reveal d${i + 1} ${testiIn ? "in" : ""}`}>
-                <div className="flex gap-0.5 mb-4">
-                  {Array.from({ length: rating }).map((_, j) => <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: rating }).map((_, j) => <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400"><Check className="w-3 h-3 text-emerald-500" strokeWidth={3} /> Opinión verificada · Google</span>
                 </div>
                 <p className="text-slate-600 text-[15px] leading-relaxed mb-6">&ldquo;{text}&rdquo;</p>
                 <div className="flex items-center gap-3 pt-5 border-t border-slate-100">
@@ -472,8 +544,105 @@ export default function App() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section id="faq" className="py-24 bg-white" ref={faqRef}>
+        <div className="max-w-3xl mx-auto px-6">
+          <div className={`text-center mb-12 reveal ${faqIn ? "in" : ""}`}>
+            <p className="section-tag justify-center mb-3">Preguntas frecuentes</p>
+            <h2 className="display font-black text-slate-900 text-4xl md:text-5xl uppercase">Antes de contratarnos</h2>
+            <div className="w-12 h-1 bg-red-600 rounded mx-auto mt-4" />
+          </div>
+          <div className={`space-y-3 reveal d1 ${faqIn ? "in" : ""}`}>
+            {FAQS.map(({ q, a }, i) => {
+              const open = faq === i;
+              return (
+                <div key={q} className={`faq-item ${open ? "open" : ""}`}>
+                  <h3>
+                    <button
+                      id={`faq-btn-${i}`}
+                      aria-expanded={open}
+                      aria-controls={`faq-panel-${i}`}
+                      onClick={() => setFaq(open ? null : i)}
+                      className="w-full flex items-center justify-between gap-4 text-left px-6 py-5"
+                    >
+                      <span className="font-semibold text-slate-900 text-[15.5px]">{q}</span>
+                      <ChevronDown className={`w-5 h-5 flex-shrink-0 text-red-600 transition-transform ${open ? "rotate-180" : ""}`} />
+                    </button>
+                  </h3>
+                  <div
+                    id={`faq-panel-${i}`}
+                    role="region"
+                    aria-labelledby={`faq-btn-${i}`}
+                    hidden={!open}
+                    className="grid transition-[grid-template-rows] duration-300"
+                    style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+                  >
+                    <div className="overflow-hidden">
+                      <p className="px-6 pb-5 text-slate-500 text-[14.5px] leading-relaxed">{a}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACTO */}
+      <section id="contacto" className="py-24 bg-slate-950 relative overflow-hidden" ref={contactRef}>
+        <div className="corrugated absolute inset-0 opacity-40" />
+        <Truss className="absolute inset-0 w-full h-full opacity-25" />
+        <div className="max-w-3xl mx-auto px-6 relative z-10">
+          <div className={`text-center mb-10 reveal ${contactIn ? "in" : ""}`}>
+            <p className="section-tag justify-center mb-3 text-red-400">Contacto</p>
+            <h2 className="display font-black text-white text-4xl md:text-5xl uppercase">Pedí tu presupuesto</h2>
+            <p className="text-slate-400 text-base mt-4">Completá el formulario y te respondemos en menos de 2 horas.</p>
+          </div>
+          <form
+            onSubmit={(e) => { e.preventDefault(); /* TODO: conectar handler */ }}
+            className={`bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 reveal d1 ${contactIn ? "in" : ""}`}
+          >
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="c-nombre" className="sr-only">Nombre</label>
+                <input id="c-nombre" name="nombre" type="text" autoComplete="name" required placeholder="Nombre" className="field" />
+              </div>
+              <div>
+                <label htmlFor="c-tel" className="sr-only">Teléfono</label>
+                <input id="c-tel" name="telefono" type="tel" autoComplete="tel" required placeholder="Teléfono" className="field" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label htmlFor="c-tipo" className="sr-only">Tipo de techo</label>
+              <select id="c-tipo" name="tipo_techo" defaultValue="" required className="field">
+                <option value="" disabled>Tipo de techo</option>
+                <option value="residencial">Residencial</option>
+                <option value="comercial">Comercial</option>
+                <option value="industrial">Industrial</option>
+                <option value="reparacion">Reparación / restauración</option>
+              </select>
+            </div>
+            <div className="mt-4">
+              <label htmlFor="c-msg" className="sr-only">Mensaje</label>
+              <textarea id="c-msg" name="mensaje" rows={4} placeholder="Contanos sobre tu proyecto" className="field resize-none" />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 mt-5">
+              <button type="submit" className="red-btn text-white font-bold px-7 py-3.5 rounded-lg text-sm flex items-center justify-center gap-2 flex-1">
+                <Mail className="w-4 h-4" /> Enviar consulta
+              </button>
+              <a href={WA} target="_blank" rel="noopener noreferrer" className="ghost-white text-white font-semibold px-7 py-3.5 rounded-lg text-sm flex items-center justify-center gap-2">
+                <WhatsAppIcon className="w-4 h-4" /> WhatsApp
+              </a>
+              <a href={TEL} className="ghost-white text-white font-semibold px-7 py-3.5 rounded-lg text-sm flex items-center justify-center gap-2">
+                <Phone className="w-4 h-4" /> Llamar
+              </a>
+            </div>
+          </form>
+        </div>
+      </section>
+
       {/* CTA FINAL */}
-      <section className="py-20 bg-slate-950 relative overflow-hidden">
+      <section className="py-20 bg-slate-950 relative overflow-hidden border-t border-slate-900">
         <div className="corrugated absolute inset-0 opacity-40" />
         <Truss className="absolute inset-0 w-full h-full opacity-30" />
         <div className="max-w-2xl mx-auto px-6 text-center relative z-10">
@@ -483,15 +652,16 @@ export default function App() {
           </h2>
           <p className="text-slate-400 text-base mb-8">Presupuesto sin cargo, respuesta en 24 horas y ejecución garantizada.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="red-btn text-white font-bold px-8 py-4 rounded-lg flex items-center justify-center gap-2">
+            <a href={WA} target="_blank" rel="noopener noreferrer" className="red-btn text-white font-bold px-8 py-4 rounded-lg flex items-center justify-center gap-2">
               <MessageCircle className="w-5 h-5" /> Solicitar presupuesto
-            </button>
-            <button className="ghost-white text-white font-semibold px-8 py-4 rounded-lg flex items-center justify-center gap-2">
+            </a>
+            <a href={TEL} className="ghost-white text-white font-semibold px-8 py-4 rounded-lg flex items-center justify-center gap-2">
               <Phone className="w-5 h-5" /> Llamar ahora
-            </button>
+            </a>
           </div>
         </div>
       </section>
+      </main>
 
       {/* FOOTER */}
       <footer className="bg-black text-white py-10 border-t border-slate-900">
@@ -501,11 +671,16 @@ export default function App() {
             <span className="display font-extrabold text-xl">ReusRoof</span>
           </div>
           <div className="flex gap-7">
-            {["Inicio", "Servicios", "Galería", "Contacto"].map(l => (
-              <a key={l} href="#" className="text-white/35 hover:text-white text-sm transition-colors">{l}</a>
+            {[
+              { label: "Inicio", id: "inicio" },
+              { label: "Servicios", id: "servicios" },
+              { label: "Galería", id: "galeria" },
+              { label: "Contacto", id: "contacto" },
+            ].map(({ label, id }) => (
+              <a key={id} href={`#${id}`} className="text-white/55 hover:text-white text-sm transition-colors">{label}</a>
             ))}
           </div>
-          <p className="text-white/20 text-sm">© 2026 ReusRoof. Todos los derechos reservados.</p>
+          <p className="text-white/55 text-sm">© 2026 ReusRoof. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>
